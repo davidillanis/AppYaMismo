@@ -2,18 +2,20 @@
 import { Colors } from '@/constants/Colors';
 import { normalizeScreen } from '@/src/infrastructure/configuration/utils/GlobalConfig';
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Animated,
+    Platform,
     StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
     useWindowDimensions,
-    View
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,7 +23,6 @@ interface CameraCaptureProps {
     onPhotoTaken: (base64: string) => void;
     onCancel: () => void;
     quality?: number; // 0-1, default 0.7
-    maxWidth?: number; // px, para resize automático
 }
 
 export const CameraCapture: React.FC<CameraCaptureProps> = ({
@@ -38,15 +39,38 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     const [isCapturing, setIsCapturing] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [flash, setFlash] = useState<'off' | 'on'>('off');
+    const [facing, setFacing] = useState<CameraType>('back');
     const cameraRef = useRef<CameraView>(null);
+
+    // Shutter flash animation value
+    const flashOpacity = useRef(new Animated.Value(0)).current;
 
     const toggleFlash = () => {
         setFlash(prev => (prev === 'off' ? 'on' : 'off'));
     };
 
+    const toggleCamera = () => {
+        setFacing(prev => (prev === 'back' ? 'front' : 'back'));
+    };
+
+    const triggerShutterEffect = () => {
+        Animated.sequence([
+            Animated.timing(flashOpacity, {
+                toValue: 1,
+                duration: 50,
+                useNativeDriver: true,
+            }),
+            Animated.timing(flashOpacity, {
+                toValue: 0,
+                duration: 250,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    };
+
     if (!permission) {
         return (
-            <View style={[styles(colors, normalize).container, styles(colors, normalize).centerContent]}>
+            <View style={[styles.container, styles.centerContent]}>
                 <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
@@ -54,31 +78,31 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
     if (!permission.granted) {
         return (
-            <SafeAreaView style={styles(colors, normalize).permissionContainer}>
-                <View style={styles(colors, normalize).permissionContent}>
-                    <View style={styles(colors, normalize).iconCircle}>
+            <SafeAreaView style={[styles.permissionContainer, { backgroundColor: colors.background }]}>
+                <View style={styles.permissionContent}>
+                    <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
                         <Ionicons name="camera" size={normalize(48)} color={colors.text} />
                     </View>
-                    <Text style={styles(colors, normalize).permissionTitle}>
-                        Permiso de Cámara
+                    <Text style={[styles.permissionTitle, { color: colors.text }]}>
+                        Acceso a Cámara
                     </Text>
-                    <Text style={styles(colors, normalize).permissionText}>
-                        Necesitamos acceso a la cámara para que puedas registrar las entregas correctamente.
+                    <Text style={[styles.permissionText, { color: colors.textSecondary }]}>
+                        Para tomar tu foto, necesitamos acceso a la cámara de tu dispositivo.
                     </Text>
                     <TouchableOpacity
-                        style={styles(colors, normalize).permissionButton}
+                        style={[styles.permissionButton, { backgroundColor: colors.primary }]}
                         onPress={requestPermission}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles(colors, normalize).permissionButtonText}>
-                            Dar permiso
+                        <Text style={styles.permissionButtonText}>
+                            Permitir Acceso
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={styles(colors, normalize).cancelButtonAlt}
+                        style={styles.cancelButtonAlt}
                         onPress={onCancel}
                     >
-                        <Text style={styles(colors, normalize).cancelButtonText}>Volver</Text>
+                        <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>Cancelar</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -90,6 +114,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
         try {
             setIsCapturing(true);
+            triggerShutterEffect(); // Visual feedback immediately
 
             const photo = await cameraRef.current.takePictureAsync({
                 quality,
@@ -112,11 +137,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
         } catch (error) {
             console.error('Camera capture error:', error);
-            Alert.alert(
-                'Error',
-                'No se pudo procesar la imagen. Intenta nuevamente.',
-                [{ text: 'OK' }]
-            );
+            Alert.alert('Error', 'No se pudo procesar la imagen.', [{ text: 'OK' }]);
             setIsCapturing(false);
             setIsProcessing(false);
         }
@@ -135,31 +156,39 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     };
 
     return (
-        <View style={styles(colors, normalize).container}>
+        <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="black" />
 
             <CameraView
                 ref={cameraRef}
                 style={StyleSheet.absoluteFill}
-                facing="back"
+                facing={facing}
                 enableTorch={flash === 'on'}
             />
 
-            {/* UI Overlay */}
-            <SafeAreaView style={styles(colors, normalize).overlay} pointerEvents="box-none">
+            {/* Shutter Animation Overlay */}
+            <Animated.View
+                style={[
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: 'black', opacity: flashOpacity } // Use black or white depending on preference. White mimics flash better.
+                ]}
+                pointerEvents="none"
+            />
 
-                {/* Header: Close & Flash */}
-                <View style={styles(colors, normalize).header}>
+            <SafeAreaView style={styles.uiContainer} pointerEvents="box-none">
+
+                {/* Top Bar */}
+                <View style={styles.topBar}>
                     <TouchableOpacity
-                        style={styles(colors, normalize).headerButton}
+                        style={styles.iconButtonBlur}
                         onPress={onCancel}
                         disabled={isProcessing}
                     >
-                        <Ionicons name="close" size={normalize(28)} color="white" />
+                        <Ionicons name="close" size={normalize(26)} color="white" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={styles(colors, normalize).headerButton}
+                        style={styles.iconButtonBlur}
                         onPress={toggleFlash}
                         disabled={isProcessing}
                     >
@@ -171,201 +200,199 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                     </TouchableOpacity>
                 </View>
 
-                {/* Center: Guides */}
-                <View style={styles(colors, normalize).guidesContainerWrapper}>
-                    <View style={styles(colors, normalize).guideCorners}>
-                        <View style={[styles(colors, normalize).corner, styles(colors, normalize).cornerTL]} />
-                        <View style={[styles(colors, normalize).corner, styles(colors, normalize).cornerTR]} />
-                        <View style={[styles(colors, normalize).corner, styles(colors, normalize).cornerBL]} />
-                        <View style={[styles(colors, normalize).corner, styles(colors, normalize).cornerBR]} />
+                {/* Bottom Bar Controls */}
+                <View style={styles.bottomBar}>
+
+                    {/* Spacer / Left Action Placeholder */}
+                    <View style={styles.bottomSideAction}>
+                        {/* Future: Gallery Button could go here */}
                     </View>
-                    <Text style={styles(colors, normalize).instructionText}>
-                        Centra el objeto
-                    </Text>
-                </View>
 
-                {/* Footer: Capture */}
-                <View style={styles(colors, normalize).footer}>
-                    <TouchableOpacity
-                        style={[
-                            styles(colors, normalize).captureButtonOuter,
-                            (isCapturing || isProcessing) && styles(colors, normalize).captureButtonDisabled
-                        ]}
-                        onPress={handleTakePhoto}
-                        disabled={isCapturing || isProcessing}
-                        activeOpacity={0.7}
-                    >
-                        <View style={styles(colors, normalize).captureButtonInner} />
-                    </TouchableOpacity>
-                </View>
+                    {/* Shutter Button */}
+                    <View style={styles.shutterContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.shutterOuter,
+                                (isCapturing || isProcessing) && styles.shutterDisabled
+                            ]}
+                            onPress={handleTakePhoto}
+                            disabled={isCapturing || isProcessing}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.shutterInner} />
+                        </TouchableOpacity>
+                    </View>
 
+                    {/* Flip Camera */}
+                    <View style={styles.bottomSideAction}>
+                        <TouchableOpacity
+                            style={styles.iconButtonBlur}
+                            onPress={toggleCamera}
+                            disabled={isProcessing}
+                        >
+                            <Ionicons
+                                name="camera-reverse"
+                                size={normalize(28)}
+                                color="white"
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                </View>
             </SafeAreaView>
 
-            {/* Processing Overlay (Full Screen Block) */}
+            {/* Processing Overlay */}
             {isProcessing && (
-                <View style={styles(colors, normalize).processingOverlay}>
-                    <ActivityIndicator size="large" color="#ffffff" />
-                    <Text style={styles(colors, normalize).processingText}>Guardando...</Text>
+                <View style={styles.processingOverlay}>
+                    <View style={styles.processingContainer}>
+                        <ActivityIndicator size="large" color="#ffffff" />
+                        <Text style={styles.processingText}>Procesando...</Text>
+                    </View>
                 </View>
             )}
         </View>
     );
 };
 
-const styles = (colors: any, normalize: (size: number) => number) =>
-    StyleSheet.create({
-        container: {
-            flex: 1,
-            backgroundColor: 'black',
-        },
-        permissionContainer: {
-            flex: 1,
-            backgroundColor: colors.background,
-        },
-        permissionContent: {
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: normalize(32),
-        },
-        iconCircle: {
-            width: normalize(80),
-            height: normalize(80),
-            borderRadius: normalize(40),
-            backgroundColor: colors.surfaceVariant || '#f0f0f0',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: normalize(24),
-        },
-        permissionTitle: {
-            fontSize: normalize(24),
-            fontWeight: 'bold',
-            color: colors.text,
-            marginBottom: normalize(12),
-            textAlign: 'center',
-        },
-        permissionText: {
-            fontSize: normalize(16),
-            color: colors.textSecondary,
-            textAlign: 'center',
-            marginBottom: normalize(32),
-            lineHeight: normalize(24),
-        },
-        permissionButton: {
-            backgroundColor: colors.primary,
-            paddingVertical: normalize(16),
-            paddingHorizontal: normalize(32),
-            borderRadius: normalize(30),
-            width: '100%',
-            alignItems: 'center',
-            marginBottom: normalize(16),
-        },
-        permissionButtonText: {
-            color: '#fff',
-            fontSize: normalize(16),
-            fontWeight: '600',
-        },
-        centerContent: {
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
-        overlay: {
-            flex: 1,
-            justifyContent: 'space-between',
-        },
-        header: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            paddingHorizontal: normalize(20),
-            paddingTop: normalize(10),
-        },
-        headerButton: {
-            width: normalize(44),
-            height: normalize(44),
-            borderRadius: normalize(22),
-            backgroundColor: 'rgba(0,0,0,0.3)',
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
-        guidesContainerWrapper: {
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            pointerEvents: 'none',
-        },
-        guideCorners: {
-            width: normalize(260),
-            height: normalize(260),
-            position: 'relative',
-        },
-        corner: {
-            position: 'absolute',
-            width: normalize(20),
-            height: normalize(20),
-            borderColor: 'white',
-            borderWidth: 3,
-            opacity: 0.8,
-        },
-        cornerTL: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
-        cornerTR: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
-        cornerBL: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
-        cornerBR: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
-        instructionText: {
-            color: 'white',
-            marginTop: normalize(20),
-            fontSize: normalize(16),
-            fontWeight: '600',
-            textShadowColor: 'rgba(0,0,0,0.5)',
-            textShadowOffset: { width: 1, height: 1 },
-            textShadowRadius: 3,
-            backgroundColor: 'rgba(0,0,0,0.3)',
-            paddingHorizontal: normalize(12),
-            paddingVertical: normalize(4),
-            borderRadius: normalize(8),
-            overflow: 'hidden',
-        },
-        footer: {
-            paddingBottom: normalize(30),
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        captureButtonOuter: {
-            width: normalize(84),
-            height: normalize(84),
-            borderRadius: normalize(42),
-            borderWidth: 4,
-            borderColor: 'white',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0,0,0,0.1)',
-        },
-        captureButtonInner: {
-            width: normalize(68),
-            height: normalize(68),
-            borderRadius: normalize(34),
-            backgroundColor: 'white',
-        },
-        captureButtonDisabled: {
-            opacity: 0.5,
-        },
-        cancelButtonAlt: {
-            padding: normalize(12),
-        },
-        cancelButtonText: {
-            color: colors.textSecondary,
-            fontSize: normalize(16),
-        },
-        processingOverlay: {
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 999,
-        },
-        processingText: {
-            color: 'white',
-            marginTop: normalize(16),
-            fontSize: normalize(16),
-            fontWeight: '500',
-        },
-    });
+const normalize = (size: number, width: number) => {
+    const scale = width / 375;
+    return Math.round(size * scale);
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'black',
+    },
+    uiContainer: {
+        flex: 1,
+        justifyContent: 'space-between',
+        paddingVertical: 20,
+    },
+    topBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? 20 : 0,
+    },
+    bottomBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 40,
+        paddingBottom: 20,
+    },
+    bottomSideAction: {
+        width: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iconButtonBlur: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(0,0,0,0.4)', // Glassmorphism-ish look
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    shutterContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    shutterOuter: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        borderWidth: 6,
+        borderColor: 'rgba(255,255,255,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+    },
+    shutterInner: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: 'white',
+    },
+    shutterDisabled: {
+        opacity: 0.5,
+    },
+
+    // Permission Styles
+    permissionContainer: {
+        flex: 1,
+    },
+    permissionContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 32,
+    },
+    centerContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    iconCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    permissionTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    permissionText: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 32,
+        lineHeight: 24,
+    },
+    permissionButton: {
+        paddingVertical: 16,
+        paddingHorizontal: 32,
+        borderRadius: 30,
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 16,
+        elevation: 2,
+    },
+    permissionButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    cancelButtonAlt: {
+        padding: 12,
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
+
+    // Processing Styles
+    processingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 999,
+    },
+    processingContainer: {
+        padding: 20,
+        backgroundColor: 'rgba(30,30,30,0.9)',
+        borderRadius: 16,
+        alignItems: 'center',
+    },
+    processingText: {
+        color: 'white',
+        marginTop: 12,
+        fontSize: 16,
+        fontWeight: '500',
+    },
+});

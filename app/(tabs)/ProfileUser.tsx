@@ -25,8 +25,13 @@ import {
   UserEntity,
   UserUpdateRequestDTO,
 } from "@/src/domain/entities/UserEntity";
+import { uploadImageToImgBB } from "@/src/domain/services/UtilsService";
+import { mappingError } from "@/src/infrastructure/configuration/security/DecodeToken";
+import { CameraCapture } from "@/src/presentation/components/CameraCapture";
 import { useUserById } from "@/src/presentation/hooks/useUserById";
 import { useUserMutation } from "@/src/presentation/hooks/useUserMutation";
+import { launchImageLibraryAsync, MediaTypeOptions } from "expo-image-picker";
+import Toast from "react-native-toast-message";
 
 const FALLBACK_AVATAR =
   "https://ui-avatars.com/api/?name=Usuario&background=273E47&color=ffffff&bold=true";
@@ -75,8 +80,11 @@ const ProfileUser: React.FC = () => {
   const { updateUserAsync, isUpdating } = useUserMutation();
 
   // ✅ Imagen (mantienes tu UI)
+  // ✅ Imagen (mantienes tu UI)
   const [profileImage, setProfileImage] = useState<string>(FALLBACK_AVATAR);
   const [showImageOptions, setShowImageOptions] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // ✅ Campos (antes estaban hardcodeados, ahora se llenan desde mergedUser)
   const [nombre, setNombre] = useState("");
@@ -152,12 +160,69 @@ const ProfileUser: React.FC = () => {
     }
   };
 
+  const handleImageUpload = async (base64: string) => {
+    try {
+      setShowCameraModal(false);
+      setShowImageOptions(false);
+      setIsUploadingImage(true);
+
+      const response = await uploadImageToImgBB(base64, 600, async (url) => {
+        if (mergedUser?.id) {
+          await updateUserAsync({ id: mergedUser.id, data: { imageUrl: url } });
+        }
+      });
+      const imageUrl = response.data.display_url;
+      // setProfileImage(imageUrl); // El useEffect lo actualizará cuando mergingUser cambie o podemos hacerlo optimistamente
+
+      Toast.show({
+        type: 'success',
+        text1: 'Foto guardada correctamente',
+      });
+
+    } catch (error) {
+      console.log(mappingError(error));
+      Toast.show({
+        type: 'error',
+        text1: 'Error al guardar la foto',
+        text2: 'Intenta nuevamente',
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const result = await launchImageLibraryAsync({
+        mediaTypes: MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.7,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        if (asset.base64) {
+          const base64 = `data:${asset.mimeType || "image/jpeg"};base64,${asset.base64}`;
+          handleImageUpload(base64);
+        }
+      }
+    } catch (error) {
+      console.log("Error picking image", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error al seleccionar imagen',
+      });
+    }
+  };
+
   const selectImageOption = (option: "camera" | "gallery") => {
     setShowImageOptions(false);
-    Alert.alert(
-      option === "camera" ? "Cámara" : "Galería",
-      "Funcionalidad por implementar",
-    );
+    if (option === "camera") {
+      setShowCameraModal(true);
+    } else {
+      handlePickImage();
+    }
   };
 
   // 🔹 InfoItem reutilizable (tu UI igual)
@@ -271,8 +336,13 @@ const ProfileUser: React.FC = () => {
               <TouchableOpacity
                 style={styles.cameraButton}
                 onPress={() => setShowImageOptions(true)}
+                disabled={isUploadingImage}
               >
-                <Ionicons name="camera" size={20} color="#fff" />
+                {isUploadingImage ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons name="camera" size={20} color="#fff" />
+                )}
               </TouchableOpacity>
             </View>
 
@@ -463,6 +533,22 @@ const ProfileUser: React.FC = () => {
           </View>
         </Modal>
       </SafeAreaView>
+
+      {/* Camera Modal */}
+      <Modal
+        visible={showCameraModal}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowCameraModal(false)}
+      >
+        <CameraCapture
+          onPhotoTaken={handleImageUpload}
+          onCancel={() => setShowCameraModal(false)}
+          quality={0.7}
+        />
+      </Modal>
+
+      <Toast />
     </>
   );
 };

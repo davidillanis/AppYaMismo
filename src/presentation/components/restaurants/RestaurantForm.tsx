@@ -1,17 +1,22 @@
 import { Colors } from "@/constants/Colors";
 import { RestaurantCreateRequestDTO } from "@/src/domain/entities/RestaurantEntity";
+import { uploadImageToImgBB } from "@/src/domain/services/UtilsService";
+import { CameraCapture } from "@/src/presentation/components/CameraCapture";
 import { Ionicons } from "@expo/vector-icons";
+import { launchImageLibraryAsync, MediaTypeOptions } from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 interface Props {
   initialValues?: Partial<RestaurantCreateRequestDTO>;
@@ -39,7 +44,75 @@ export const RestaurantForm: React.FC<Props> = ({
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
 
+  // Estados para manejo de imagen
+  const [showCamera, setShowCamera] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showImageOptions, setShowImageOptions] = useState(false);
+
   const RED_COLOR = "#D32F2F";
+
+  const handleImageUpload = async (base64: string) => {
+    try {
+      setShowCamera(false);
+      setShowImageOptions(false);
+      setIsUploadingImage(true);
+
+      const response = await uploadImageToImgBB(base64, 600, (url) => {
+        // Opcional: callback de progreso o finalización intermedia
+      });
+
+      const imageUrl = response.data.display_url;
+      setUrlImagen(imageUrl);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Imagen cargada correctamente',
+      });
+
+    } catch (error) {
+      console.error(error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error al subir la imagen',
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const result = await launchImageLibraryAsync({
+        mediaTypes: MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.7,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        if (asset.base64) {
+          const base64 = `data:${asset.mimeType || "image/jpeg"};base64,${asset.base64}`;
+          handleImageUpload(base64);
+        }
+      }
+    } catch (error) {
+      console.log("Error picking image", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error al seleccionar imagen',
+      });
+    }
+  };
+
+  const selectImageOption = (option: "camera" | "gallery") => {
+    setShowImageOptions(false);
+    if (option === "camera") {
+      setShowCamera(true);
+    } else {
+      handlePickImage();
+    }
+  };
 
   useEffect(() => {
     if (!initialValues) return;
@@ -114,14 +187,22 @@ export const RestaurantForm: React.FC<Props> = ({
       )}
 
       <View style={styles.imagePreviewContainer}>
-        {urlImagen ? (
-          <Image source={{ uri: urlImagen }} style={styles.imagePreview} />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="image-outline" size={40} color="#bbb" />
-            <Text style={{ color: "#999", marginTop: 5 }}>URL de Imagen</Text>
-          </View>
-        )}
+        <TouchableOpacity onPress={() => setShowImageOptions(true)} disabled={isUploadingImage} style={{ width: '100%', alignItems: 'center' }}>
+          {urlImagen ? (
+            <Image source={{ uri: urlImagen }} style={styles.imagePreview} />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Ionicons name="image-outline" size={40} color="#bbb" />
+              <Text style={{ color: "#999", marginTop: 5 }}>Toca para agregar imagen</Text>
+            </View>
+          )}
+
+          {isUploadingImage && (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', borderRadius: 12 }]}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          )}
+        </TouchableOpacity>
 
         {lat !== null && lng !== null && (
           <View style={{ flexDirection: "row", marginTop: 8 }}>
@@ -196,6 +277,53 @@ export const RestaurantForm: React.FC<Props> = ({
         )}
       </TouchableOpacity>
       <View style={{ height: 40 }} />
+
+      {/* MODALES DE IMAGEN */}
+      <Modal visible={showImageOptions} transparent animationType="fade" onRequestClose={() => setShowImageOptions(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowImageOptions(false)}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Cambiar imagen</Text>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => selectImageOption("camera")}
+            >
+              <Ionicons name="camera" size={24} color={colors.primary} />
+              <Text style={styles.modalOptionText}>Tomar foto</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => selectImageOption("gallery")}
+            >
+              <Ionicons name="images" size={24} color={colors.primary} />
+              <Text style={styles.modalOptionText}>
+                Seleccionar de galería
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalCancel}
+              onPress={() => setShowImageOptions(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal
+        visible={showCamera}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowCamera(false)}
+      >
+        <CameraCapture
+          onPhotoTaken={handleImageUpload}
+          onCancel={() => setShowCamera(false)}
+          quality={0.7}
+        />
+      </Modal>
     </ScrollView>
   );
 };
@@ -256,4 +384,45 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   submitButtonText: { color: "#fff", fontWeight: "bold", fontSize: 15 },
+
+  // Estilos Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  modalOptionText: {
+    fontSize: 16,
+    marginLeft: 12,
+  },
+  modalCancel: {
+    padding: 16,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: 'red',
+  },
 });

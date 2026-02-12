@@ -70,14 +70,14 @@ export default function EditRestaurantScreen() {
 
   const initialValues = restaurantData
     ? {
-        name: restaurantData.name,
-        address: restaurantData.address,
-        urlImagen: restaurantData.urlImagen,
-        enabled: restaurantData.enabled,
-        latitude: pickedLat ?? restaurantData.latitude ?? null,
-        longitude: pickedLng ?? restaurantData.longitude ?? null,
-        type: restaurantData.restaurantTypes?.map((t) => t.name) || [],
-      }
+      name: restaurantData.name,
+      address: restaurantData.address,
+      urlImagen: restaurantData.urlImagen,
+      enabled: restaurantData.enabled,
+      latitude: pickedLat ?? restaurantData.latitude ?? null,
+      longitude: pickedLng ?? restaurantData.longitude ?? null,
+      type: restaurantData.restaurantTypes?.map((t) => t.name) || [],
+    }
     : undefined;
 
   if (!restaurantId) {

@@ -6,12 +6,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const VariantesProducto = () => {
@@ -36,13 +36,13 @@ const VariantesProducto = () => {
   };
 
   const guardar = () => {
-  router.replace({
-    pathname: "../AgregarProducto",
-    params: {
-      variants: JSON.stringify(lista),
-    },
-  });
-};
+    router.replace({
+      pathname: "../AgregarProducto",
+      params: {
+        variants: JSON.stringify(lista),
+      },
+    });
+  };
 
 
   const styles = createStyles(colors, normalize);
@@ -67,8 +67,8 @@ const VariantesProducto = () => {
               value={item.price === 0 ? "" : String(item.price)}
 
               onChangeText={(v) =>
-  actualizar(index, "price", v === "" ? 0 : Number(v))
-}
+                actualizar(index, "price", v === "" ? 0 : Number(v))
+              }
 
             />
             <TextInput
@@ -78,8 +78,8 @@ const VariantesProducto = () => {
               value={item.stock === 0 ? "" : String(item.stock)}
 
               onChangeText={(v) =>
-  actualizar(index, "stock", v === "" ? 0 : Number(v))
-}
+                actualizar(index, "stock", v === "" ? 0 : Number(v))
+              }
 
             />
           </View>

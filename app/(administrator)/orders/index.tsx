@@ -34,46 +34,46 @@ export default function OrderManagement() {
     size: 50,
     // 🔥 CORRECCIÓN: Solicitamos los campos anidados userEntity.name y lastName
     fields: [
-        "id", 
-        "orderStatus", 
-        "total", 
-        "createdAt", 
-        "customer.userEntity.name", 
-        "customer.userEntity.lastName"
+      "id",
+      "orderStatus",
+      "total",
+      "createdAt",
+      "customer.userEntity.name",
+      "customer.userEntity.lastName"
     ]
   });
 
   const orders = response?.data?.content || [];
   const updateMutation = useUpdateOrder();
 
-  const filteredOrders = orders.filter((o) => {
+  const filteredOrders = orders.filter((o: OrderEntity) => {
     // 🔥 CORRECCIÓN: Acceso seguro a userEntity
     const customerName = o.customer?.userEntity?.name || "";
     const customerLastName = o.customer?.userEntity?.lastName || "";
     const fullName = `${customerName} ${customerLastName}`.toLowerCase();
-    
+
     return fullName.includes(searchText.toLowerCase()) || String(o.id).includes(searchText);
   });
 
   const handleUpdateStatus = (id: number, newStatus: EOrderStatus) => {
     if (newStatus === EOrderStatus.RECHAZADO || newStatus === EOrderStatus.CANCELADO) {
-        Alert.alert(
-            "Confirmar Acción",
-            `¿Estás seguro de marcar el pedido #${id} como ${newStatus}?`,
-            [
-                { text: "Cancelar", style: "cancel" },
-                { text: "Confirmar", onPress: () => executeUpdate(id, newStatus) }
-            ]
-        );
+      Alert.alert(
+        "Confirmar Acción",
+        `¿Estás seguro de marcar el pedido #${id} como ${newStatus}?`,
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Confirmar", onPress: () => executeUpdate(id, newStatus) }
+        ]
+      );
     } else {
-        executeUpdate(id, newStatus);
+      executeUpdate(id, newStatus);
     }
   };
 
   const executeUpdate = (id: number, orderStatus: EOrderStatus) => {
     updateMutation.mutate(
-        { id, payload: { orderStatus } },
-        { onError: () => Alert.alert("Error", "No se pudo actualizar el estado") }
+      { id, payload: { orderStatus } },
+      { onError: () => Alert.alert("Error", "No se pudo actualizar el estado") }
     );
   };
 
@@ -95,50 +95,50 @@ export default function OrderManagement() {
 
       <View style={styles.filterSection}>
         <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#666" />
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Buscar por cliente o ID..."
-                value={searchText}
-                onChangeText={setSearchText}
-                placeholderTextColor="#999"
-            />
+          <Ionicons name="search" size={20} color="#666" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar por cliente o ID..."
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#999"
+          />
         </View>
 
-        <OrderStatusFilter 
-            selectedStatus={selectedStatus}
-            onSelectStatus={setSelectedStatus}
-            colors={colors}
-            backgroundColor={colors.background}
+        <OrderStatusFilter
+          selectedStatus={selectedStatus}
+          onSelectStatus={setSelectedStatus}
+          colors={colors}
+          backgroundColor={colors.background}
         />
       </View>
 
       {isLoading ? (
         <View style={styles.center}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={{ marginTop: 10, color: "#666" }}>Cargando pedidos...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: 10, color: "#666" }}>Cargando pedidos...</Text>
         </View>
       ) : (
         <FlatList
-            data={filteredOrders}
-            keyExtractor={(item) => String(item.id)}
-            contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => (
-                <OrderCardAdmin
-                    order={item}
-                    colors={colors}
-                    onUpdateStatus={handleUpdateStatus}
-                    onViewDetails={handleViewDetails}
-                />
-            )}
-            ListEmptyComponent={
-                <View style={styles.center}>
-                    <Ionicons name="receipt-outline" size={50} color="#ccc" />
-                    <Text style={{ color: "#999", marginTop: 10 }}>No hay pedidos en este estado.</Text>
-                </View>
-            }
-            refreshing={isLoading}
-            onRefresh={refetch}
+          data={filteredOrders}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => (
+            <OrderCardAdmin
+              order={item}
+              colors={colors}
+              onUpdateStatus={handleUpdateStatus}
+              onViewDetails={handleViewDetails}
+            />
+          )}
+          ListEmptyComponent={
+            <View style={styles.center}>
+              <Ionicons name="receipt-outline" size={50} color="#ccc" />
+              <Text style={{ color: "#999", marginTop: 10 }}>No hay pedidos en este estado.</Text>
+            </View>
+          }
+          refreshing={isLoading}
+          onRefresh={refetch}
         />
       )}
     </SafeAreaView>

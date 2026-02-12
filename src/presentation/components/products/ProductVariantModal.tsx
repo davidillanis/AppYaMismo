@@ -3,13 +3,13 @@ import { ProductEntity, ProductVariantEntity } from "@/src/domain/entities/Produ
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 interface Props {
@@ -43,7 +43,7 @@ export const ProductVariantModal: React.FC<Props> = ({
   // Filtrar variantes válidas (si tu entidad tiene 'stock' o 'enabled', úsalos aquí)
   // Nota: Ajusta la validación según los campos reales de tu 'ProductVariantEntity'
   const variants = product.variant || [];
-  
+
   const handleAddToCart = () => {
     if (selectedVariant) {
       onAddToCart(product, selectedVariant, quantity);
@@ -68,7 +68,7 @@ export const ProductVariantModal: React.FC<Props> = ({
       <View style={styles.overlay}>
         {/* Contenedor Principal (Estilo Bottom Sheet) */}
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-          
+
           {/* Imagen de Cabecera */}
           <View style={styles.imageContainer}>
             <Image
@@ -87,7 +87,7 @@ export const ProductVariantModal: React.FC<Props> = ({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView style={[styles.content, { backgroundColor: colors.surface }]} showsVerticalScrollIndicator={false}>
             {/* Información Básica */}
             <Text style={[styles.productName, { color: colors.text }]}>
               {product.name}
@@ -98,7 +98,7 @@ export const ProductVariantModal: React.FC<Props> = ({
               </Text>
             ) : null}
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.text }]} />
 
             {/* Selección de Variantes */}
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -108,40 +108,40 @@ export const ProductVariantModal: React.FC<Props> = ({
             <View style={styles.variantsContainer}>
               {variants.length > 0 ? (
                 variants.map((variant) => {
-                    const isSelected = selectedVariant?.id === variant.id;
-                    return (
-                        <TouchableOpacity
-                        key={variant.id}
-                        style={[
-                            styles.variantOption,
-                            { 
-                                borderColor: isSelected ? colors.primary : "#ddd",
-                                backgroundColor: isSelected ? `${colors.primary}10` : "transparent"
-                            },
-                        ]}
-                        onPress={() => setSelectedVariant(variant)}
-                        activeOpacity={0.7}
-                        >
-                        <View style={styles.variantInfo}>
-                            <View style={[
-                                styles.radioCircle, 
-                                { borderColor: isSelected ? colors.primary : "#999" }
-                            ]}>
-                                {isSelected && <View style={[styles.selectedDot, { backgroundColor: colors.primary }]} />}
-                            </View>
-                            <Text style={[styles.variantName, { color: colors.text }]}>
-                            {variant.name}
-                            </Text>
+                  const isSelected = selectedVariant?.id === variant.id;
+                  return (
+                    <TouchableOpacity
+                      key={variant.id}
+                      style={[
+                        styles.variantOption,
+                        {
+                          borderColor: isSelected ? colors.primary : "#ddd",
+                          backgroundColor: isSelected ? `${colors.primary}10` : "transparent"
+                        },
+                      ]}
+                      onPress={() => setSelectedVariant(variant)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.variantInfo}>
+                        <View style={[
+                          styles.radioCircle,
+                          { borderColor: isSelected ? colors.primary : "#999" }
+                        ]}>
+                          {isSelected && <View style={[styles.selectedDot, { backgroundColor: colors.primary }]} />}
                         </View>
-                        <Text style={[styles.variantPrice, { color: colors.text }]}>
-                            S/ {variant.price.toFixed(2)}
+                        <Text style={[styles.variantName, { color: colors.text }]}>
+                          {variant.name}
                         </Text>
-                        </TouchableOpacity>
-                    );
+                      </View>
+                      <Text style={[styles.variantPrice, { color: colors.text }]}>
+                        S/ {variant.price.toFixed(2)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
                 })
               ) : (
-                <Text style={{color: colors.error, fontStyle: 'italic'}}>
-                    No hay opciones disponibles para este producto.
+                <Text style={{ color: colors.error, fontStyle: 'italic' }}>
+                  No hay opciones disponibles para este producto.
                 </Text>
               )}
             </View>
@@ -159,11 +159,11 @@ export const ProductVariantModal: React.FC<Props> = ({
                   >
                     <Ionicons name="remove" size={20} color={colors.text} />
                   </TouchableOpacity>
-                  
+
                   <Text style={[styles.qtyText, { color: colors.text }]}>
                     {quantity}
                   </Text>
-                  
+
                   <TouchableOpacity
                     onPress={incrementQuantity}
                     style={[styles.qtyButton, { borderColor: colors.primary, backgroundColor: colors.primary }]}
