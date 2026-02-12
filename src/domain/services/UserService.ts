@@ -26,7 +26,7 @@ export const createUser = async (
 export const registerCustomer = async (
   payload: Partial<UserCreateRequestDTO>,
 ): Promise<ResponseStatusDTO<UserEntity>> => {
-  let url = `${BASE_PATH}/register-customer`;
+  let url = `${BASE_PATH}/create-customer`;
   const response = await apiClient.post<ResponseStatusDTO<UserEntity>>(
     url,
     payload,

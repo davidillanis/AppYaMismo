@@ -5,7 +5,7 @@ import { ImgBBResponse } from "../types/ImgBBResponse";
 const IMGBB_ENDPOINT = "https://api.imgbb.com/1/upload";
 
 
-export const uploadImageToImgBB = async (imageBase64: string, expiration = 6, onSuccess?: (url: string) => void): Promise<ImgBBResponse> => {
+export const uploadImageToImgBB = async (imageBase64: string, expiration = 0, onSuccess?: (url: string) => void): Promise<ImgBBResponse> => {
     try {
         // Strip the header if present (data:image/jpeg;base64,...)
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
