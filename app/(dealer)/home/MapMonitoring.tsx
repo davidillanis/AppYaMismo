@@ -3,6 +3,7 @@ import { OrderMapPoint } from "@/src/domain/types/MapType";
 import { normalizeScreen } from "@/src/infrastructure/configuration/utils/GlobalConfig";
 import { createStyles } from "@/src/presentation/shared/styles/theme";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
 import * as ExpoLocation from "expo-location";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -356,6 +357,27 @@ const MapMonitoring = () => {
         }
     }, []);
 
+    const handleContactWhatsApp = useCallback((phone: string, orderId: number) => {
+        if (!phone) {
+            Toast.show({
+                type: 'error',
+                text1: 'Sin teléfono',
+                text2: "Este cliente no tiene número registrado.",
+            });
+            return;
+        }
+        const message = `Hola, soy tu repartidor de AppYaMismo. Estoy en camino con tu pedido #${orderId}.`;
+        const url = `whatsapp://send?phone=+51${phone}&text=${encodeURIComponent(message)}`;
+
+        Linking.canOpenURL(url).then(supported => {
+            if (supported) {
+                return Linking.openURL(url);
+            } else {
+                Linking.openURL(`https://wa.me/+51${phone}?text=${encodeURIComponent(message)}`);
+            }
+        }).catch(err => console.error("An error occurred", err));
+    }, []);
+
     // 6. Render
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -438,27 +460,40 @@ const MapMonitoring = () => {
                                 </Text>
                             </View>
                         </View>
-                        <TouchableOpacity style={[{ backgroundColor: colors.warning, borderRadius: normalize(10), padding: normalize(10), alignItems: "center", justifyContent: "center" }]}
-                            onPress={() => router.push({
-                                pathname: '/(dealer)/home/QrPage',
-                                params: {
-                                    orderId: selectedOrder.id,
-                                    customer: selectedOrder.customer.name,
-                                    address: selectedOrder.customer.address,
-                                    phone: selectedOrder.customer.phone,
-                                    items: JSON.stringify([
-                                        ...selectedOrder.restaurant.flatMap((rest) => rest.products.map((prod) => ({
-                                            name: prod.name,
-                                            quantity: prod.quantity,
-                                            price: prod.price
-                                        })))
-                                    ]),
-                                    total: orderTotal
-                                }
-                            })}
-                        >
-                            <Ionicons name="qr-code" size={normalize(18)} color="#FFF" style={{ marginRight: 6 }} />
-                        </TouchableOpacity>
+                        <View style={locationStyles.actionButtonsRow}>
+                            <TouchableOpacity
+                                style={[locationStyles.actionButtonMain, { backgroundColor: colors.success }]}
+                                onPress={() => handleContactWhatsApp(selectedOrder.customer.phone || "", selectedOrder.id)}
+                            >
+                                <Ionicons name="logo-whatsapp" size={normalize(20)} color="#fff" />
+                                <Text style={locationStyles.actionButtonText}>Contactar</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[locationStyles.actionButtonMain, { backgroundColor: colors.text }]}
+                                onPress={() => router.push({
+                                    pathname: '/(dealer)/home/QrPage',
+                                    params: {
+                                        orderId: selectedOrder.id,
+                                        customer: selectedOrder.customer.name,
+                                        address: selectedOrder.customer.address,
+                                        phone: selectedOrder.customer.phone,
+                                        items: JSON.stringify([
+                                            ...selectedOrder.restaurant.flatMap((rest) => rest.products.map((prod) => ({
+                                                name: prod.name,
+                                                quantity: prod.quantity,
+                                                price: prod.price
+                                            })))
+                                        ]),
+                                        total: orderTotal
+                                    }
+                                })}
+                            >
+                                <Ionicons name="qr-code" size={normalize(18)} color={colors.background} />
+                                <Text style={[locationStyles.actionButtonText, { color: colors.background }]}>QR Entrega</Text>
+                            </TouchableOpacity>
+                        </View>
+
                         <View style={[locationStyles.productsDivider, { backgroundColor: colors.border }]} />
 
                         <ScrollView
@@ -529,7 +564,7 @@ const locationStyles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        maxHeight: normalize(320),
+        maxHeight: normalize(340),
     },
     infoPanelHeader: {
         flexDirection: "row",
@@ -712,5 +747,28 @@ const locationStyles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 3,
+    },
+    actionButtonsRow: {
+        flexDirection: "row",
+        gap: normalize(10),
+        marginTop: normalize(8),
+    },
+    actionButtonMain: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: normalize(10),
+        borderRadius: normalize(10),
+        gap: normalize(8),
+        elevation: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+    },
+    actionButtonText: {
+        color: "#fff",
+        fontWeight: "600",
+        fontSize: normalize(13),
     },
 });

@@ -6,6 +6,7 @@ import { CarCardProps } from "@/src/domain/types/WidgetsType";
 import { normalizeScreen } from "@/src/infrastructure/configuration/utils/GlobalConfig";
 import { useAuth } from "@/src/presentation/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -14,7 +15,7 @@ import {
     Pressable,
     StyleSheet,
     Text,
-    View
+    View,
 } from "react-native";
 
 const ActualOrderCard: React.FC<CarCardProps> = ({
@@ -27,10 +28,11 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
     const [orders, setOrders] = useState<OrderEntity[]>([]);
     const isMounted = useRef(true);
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const scaleAnim = useRef(new Animated.Value(0.95)).current;
-    const { user } = useAuth();
 
-    const styles = useMemo(() => createStyles(colors, normalize), [colors, normalize]);
+    // Scale animation for the list container
+    const scaleAnim = useRef(new Animated.Value(0.98)).current;
+
+    const { user } = useAuth();
 
     const getGroupedProducts = (details: any[]) => {
         if (!details || !Array.isArray(details)) return [];
@@ -42,6 +44,7 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
         });
         return Object.entries(groups);
     };
+
     const transformToMapPoint = (order: OrderEntity): OrderMapPoint => {
         const restaurantGroups = getGroupedProducts(order.orderDetails);
 
@@ -88,7 +91,7 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
                 Animated.parallel([
                     Animated.timing(fadeAnim, {
                         toValue: 1,
-                        duration: 400,
+                        duration: 500,
                         useNativeDriver: true,
                     }),
                     Animated.spring(scaleAnim, {
@@ -109,12 +112,12 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
                 setLoading(false);
             }
         }
-    }, [fadeAnim, scaleAnim]);
+    }, [fadeAnim, scaleAnim, user?.dealerId]);
 
     const handleRefresh = useCallback(async () => {
         setRefreshing(true);
         fadeAnim.setValue(0);
-        scaleAnim.setValue(0.95);
+        scaleAnim.setValue(0.98);
         await fetchOrders();
         if (isMounted.current) {
             setRefreshing(false);
@@ -128,6 +131,39 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
         })
     }, []);
 
+    const handleNavigateToQR = useCallback((order: OrderEntity) => {
+        router.push({
+            pathname: '/(dealer)/home/QrPage',
+            params: {
+                orderId: order.id.toString(),
+                customer: `${order.customer?.userEntity.name} ${order.customer?.userEntity.lastName}`.trim(),
+                address: order.customer?.userEntity.address || "",
+                phone: order.customer?.userEntity.phone || "",
+                total: order.total.toString(),
+                items: JSON.stringify(order.orderDetails.map(d => ({
+                    name: d.product.name,
+                    quantity: d.amount,
+                    price: d.unitPrice
+                })))
+            }
+        });
+    }, []);
+
+    const handleContactWhatsApp = useCallback((phone: string, orderId: number) => {
+        if (!phone) return;
+        const message = `Hola, soy tu repartidor de AppYaMismo. Estoy en camino con tu pedido #${orderId}.`;
+        const url = `whatsapp://send?phone=+51${phone}&text=${encodeURIComponent(message)}`;
+
+        Linking.canOpenURL(url).then(supported => {
+            if (supported) {
+                return Linking.openURL(url);
+            } else {
+                // Fallback for web or if whatsapp scheme isn't supported
+                Linking.openURL(`https://wa.me/+51${phone}?text=${encodeURIComponent(message)}`);
+            }
+        }).catch(err => console.error("An error occurred", err));
+    }, []);
+
     useEffect(() => {
         fetchOrders();
         return () => {
@@ -135,64 +171,111 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
         };
     }, [fetchOrders]);
 
-    const renderOrderItem = useCallback((order: OrderEntity, index: number) => (
-        <Pressable
-            key={order.id}
-            style={({ pressed }) => [
-                styles.orderItem,
-                pressed && styles.orderItemPressed,
-                { backgroundColor: colors.surfaceVariant}
-            ]}
-            onPress={() => handleNavigateToOrder(order)}
-        >
-            <View style={styles.orderLeft}>
-                <View style={styles.orderNumber}>
-                    <Text style={styles.orderNumberText}>{index + 1}</Text>
-                </View>
-                <View style={styles.orderInfo}>
-                    <Text style={[styles.orderId, { color: colors.textInverse}]}>#{order.id}</Text>
-                    <View style={styles.statusRow}>
-                        <View style={styles.statusDot} />
-                        <Text style={[styles.orderStatus, { color: colors.textInverse}]}>En ruta</Text>
+    const styles = useMemo(() => createStyles(colors, normalize), [colors, normalize]);
+
+    const renderOrderItem = useCallback((order: OrderEntity, index: number) => {
+        const customerName = `${order.customer?.userEntity.name} ${order.customer?.userEntity.lastName}`.trim();
+        const customerPhone = order.customer?.userEntity.phone || "";
+
+        return (
+            <View
+                key={order.id}
+                style={[styles.orderItemDisplay, { backgroundColor: colors.surface }]}
+            >
+                {/* Header: ID and Status */}
+                <View style={styles.orderHeaderRow}>
+                    <View style={styles.orderIdBadge}>
+                        <Text style={styles.orderIdText}>#{order.id}</Text>
+                    </View>
+                    <View style={styles.statusBadge}>
+                        <View style={[styles.statusIndicator, { backgroundColor: colors.success }]} />
+                        <Text style={styles.statusText}>{order.orderStatus.replace(/_/g, ' ')}</Text>
                     </View>
                 </View>
+
+                {/* Content: Customer Info */}
+                <View style={styles.orderContent}>
+                    <View style={styles.customerRow}>
+                        <Ionicons name="person-circle-outline" size={normalize(20)} color={colors.textSecondary} />
+                        <Text style={[styles.customerName, { color: colors.text }]} numberOfLines={1}>
+                            {customerName}
+                        </Text>
+                    </View>
+                    <View style={styles.addressRow}>
+                        <Ionicons name="location-outline" size={normalize(18)} color={colors.textSecondary} />
+                        <Text style={[styles.addressText, { color: colors.textSecondary }]} numberOfLines={1}>
+                            {order.customer?.userEntity.address || "Dirección no disponible"}
+                        </Text>
+                    </View>
+                </View>
+
+                <View style={styles.actionButtonsContainer}>
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.actionButton,
+                            styles.whatsappButton,
+                            pressed && { opacity: 0.8 }
+                        ]}
+                        onPress={() => handleContactWhatsApp(customerPhone, order.id)}
+                    >
+                        <Ionicons name="logo-whatsapp" size={normalize(20)} color="#fff" />
+                    </Pressable>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.actionButton,
+                            { backgroundColor: colors.text },
+                            pressed && { opacity: 0.8 }
+                        ]}
+                        onPress={() => handleNavigateToQR(order)}
+                    >
+                        <Ionicons name="qr-code" size={normalize(18)} color={colors.background} />
+                        <Text style={[styles.buttonText, { color: colors.background }]}>QR</Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.actionButton,
+                            styles.trackButton,
+                            { backgroundColor: colors.primary, flex: 2 },
+                            pressed && { opacity: 0.8 }
+                        ]}
+                        onPress={() => handleNavigateToOrder(order)}
+                    >
+                        <Text style={[styles.buttonText, { color: colors.textInverse }]}>Ver Mapa</Text>
+                        <Ionicons name="map-outline" size={normalize(18)} color={colors.textInverse} />
+                    </Pressable>
+                </View>
             </View>
-            <Ionicons
-                name="chevron-forward"
-                size={normalize(16)}
-                color={colors.textInverse}
-            />
-        </Pressable>
-    ), [styles, colors, normalize, handleNavigateToOrder]);
+        );
+    }, [styles, colors, normalize, handleNavigateToOrder, handleContactWhatsApp]);
 
     const renderContent = useMemo(() => {
         if (loading) {
             return (
-                <View style={styles.loadingWrapper}>
+                <View style={styles.centerWrapper}>
                     <ActivityIndicator size="small" color={colors.primary} />
-                    <Text style={styles.loadingText}>Cargando</Text>
+                    <Text style={[styles.loadingText, { color: colors.textTertiary }]}>Buscando pedidos activos...</Text>
                 </View>
             );
         }
 
         if (orders.length === 0) {
             return (
-                <View style={styles.emptyWrapper}>
-                    <View style={styles.emptyIconWrapper}>
-                        <Ionicons
-                            name="bicycle-outline"
-                            size={normalize(28)}
-                            color={colors.textTertiary}
-                        />
+                <View style={styles.centerWrapper}>
+                    <View style={[styles.emptyIconCircle, { backgroundColor: colors.surfaceVariant }]}>
+                        <Ionicons name="bicycle" size={normalize(24)} color={colors.textSecondary} />
                     </View>
-                    <Text style={styles.emptyTitle}>Todo listo</Text>
-                    <Text style={styles.emptySubtitle}>No hay entregas pendientes</Text>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>Sin pedidos en curso</Text>
+                    <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                        Los nuevos pedidos aparecerán aquí
+                    </Text>
                 </View>
             );
         }
 
         return (
-            <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
+            <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }], gap: 12 }}>
                 {orders.map((order, index) => renderOrderItem(order, index))}
             </Animated.View>
         );
@@ -200,38 +283,33 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
 
     return (
         <View style={styles.container}>
-            <Pressable
-                onPress={handleRefresh}
-                disabled={refreshing}
-                style={({ pressed }) => [
-                    styles.card,
-                    pressed && !refreshing && styles.cardPressed,
-                    { backgroundColor: colors.surface }
-                ]}
-            >
+            <View style={[styles.mainCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                {/* Card Header with Refresh */}
                 <View style={styles.cardHeader}>
-                    <View style={styles.headerLeft}>
-                        <View style={[styles.badge, { backgroundColor: colors.card }]}>
-                            <Ionicons
-                                name="location"
-                                size={normalize(14)}
-                                color={colors.primary}
-                            />
+                    <View style={styles.headerTitleRow}>
+                        <View style={[styles.iconBadge, { backgroundColor: colors.surfaceVariant }]}>
+                            <Ionicons name="flash" size={normalize(14)} color={colors.primary} />
                         </View>
-                        <View>
-                            <Text style={[styles.title, { color: colors.text }]}>Entregas activas</Text>
-                            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                                {loading ? "—" : orders.length === 0 ? "Ninguna" : `${orders.length} ${orders.length === 1 ? "pedido" : "pedidos"}`}
-                            </Text>
-                        </View>
+                        <Text style={[styles.headerTitle, { color: colors.text }]}>
+                            En Curso ({orders.length})
+                        </Text>
                     </View>
-                    {refreshing && (
-                        <ActivityIndicator size="small" color={colors.primary} />
-                    )}
+
+                    <Pressable
+                        onPress={handleRefresh}
+                        style={({ pressed }) => [styles.refreshButton, pressed && { backgroundColor: colors.surfaceVariant }]}
+                        hitSlop={8}
+                    >
+                        {refreshing ? (
+                            <ActivityIndicator size="small" color={colors.primary} />
+                        ) : (
+                            <Ionicons name="refresh" size={normalize(18)} color={colors.textSecondary} />
+                        )}
+                    </Pressable>
                 </View>
 
                 {renderContent}
-            </Pressable>
+            </View>
         </View>
     );
 };
@@ -245,153 +323,177 @@ const createStyles = (
             paddingHorizontal: 20,
             marginBottom: 20,
         },
-        card: {
-            backgroundColor: colors.card,
-            borderRadius: 16,
-            padding: 18,
+        mainCard: {
+            borderRadius: 20,
+            padding: 16,
             borderWidth: 1,
-            borderColor: colors.border,
-            elevation: 1,
+            // Subtle shadow for depth
+            elevation: 2,
             shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.03,
-            shadowRadius: 3,
-        },
-        cardPressed: {
-            opacity: 0.92,
-            transform: [{ scale: 0.99 }],
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 8,
         },
         cardHeader: {
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             marginBottom: 16,
         },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        badge: {
-            width: normalize(36),
-            height: normalize(36),
-            borderRadius: normalize(10),
-            backgroundColor: colors.surfaceVariant,
-            justifyContent: "center",
-            alignItems: "center",
-        },
-        title: {
-            fontSize: normalize(15),
-            fontWeight: "600",
-            color: colors.text,
-            fontFamily: colors.fontPrimary,
-            letterSpacing: -0.2,
-        },
-        subtitle: {
-            fontSize: normalize(12),
-            color: colors.textSecondary,
-            fontFamily: colors.fontSecondary,
-            marginTop: 2,
-        },
-        loadingWrapper: {
-            paddingVertical: 28,
-            alignItems: "center",
+        headerTitleRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
             gap: 10,
         },
-        loadingText: {
-            fontSize: normalize(12),
-            color: colors.textTertiary,
-            fontFamily: colors.fontSecondary,
-        },
-        emptyWrapper: {
-            paddingVertical: 32,
-            alignItems: "center",
-        },
-        emptyIconWrapper: {
-            width: normalize(56),
-            height: normalize(56),
-            borderRadius: normalize(28),
-            backgroundColor: colors.surfaceVariant,
+        iconBadge: {
+            width: normalize(32),
+            height: normalize(32),
+            borderRadius: normalize(10),
             justifyContent: "center",
             alignItems: "center",
-            marginBottom: 12,
         },
-        emptyTitle: {
-            fontSize: normalize(14),
-            fontWeight: "600",
-            color: colors.text,
+        headerTitle: {
+            fontSize: normalize(16),
+            fontWeight: "700",
+            letterSpacing: -0.3,
             fontFamily: colors.fontPrimary,
+        },
+        refreshButton: {
+            width: normalize(32),
+            height: normalize(32),
+            borderRadius: normalize(16),
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        // Loading & Empty States
+        centerWrapper: {
+            paddingVertical: 24,
+            alignItems: "center",
+            gap: 8,
+        },
+        loadingText: {
+            fontSize: normalize(13),
+            fontFamily: colors.fontSecondary,
+        },
+        emptyIconCircle: {
+            width: normalize(48),
+            height: normalize(48),
+            borderRadius: normalize(24),
+            justifyContent: "center",
+            alignItems: "center",
             marginBottom: 4,
         },
+        emptyTitle: {
+            fontSize: normalize(15),
+            fontWeight: "600",
+            fontFamily: colors.fontPrimary,
+        },
         emptySubtitle: {
-            fontSize: normalize(12),
-            color: colors.textTertiary,
+            fontSize: normalize(13),
             fontFamily: colors.fontSecondary,
         },
-        orderItem: {
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingVertical: 14,
-            paddingHorizontal: 14,
-            backgroundColor: colors.surface,
-            borderRadius: 12,
-            marginBottom: 8,
+        // Order Item
+        orderItemDisplay: {
+            borderRadius: 16,
+            padding: 14,
             borderWidth: 1,
-            borderColor: colors.border,
+            borderColor: 'rgba(0,0,0,0.04)', // Very subtle border
         },
-        orderItemPressed: {
-            opacity: 0.6,
-            backgroundColor: colors.surfaceVariant,
+        orderHeaderRow: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 10,
         },
-        orderLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            flex: 1,
+        orderIdBadge: {
+            backgroundColor: 'rgba(0,0,0,0.05)',
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 6,
         },
-        orderNumber: {
-            width: normalize(28),
-            height: normalize(28),
-            borderRadius: normalize(8),
-            backgroundColor: colors.primary,
-            justifyContent: "center",
-            alignItems: "center",
-        },
-        orderNumberText: {
-            fontSize: normalize(13),
-            fontWeight: "700",
-            color: colors.textInverse,
+        orderIdText: {
+            fontSize: normalize(12),
+            fontWeight: '700',
+            color: colors.textSecondary,
             fontFamily: colors.fontPrimary,
         },
-        orderInfo: {
-            flex: 1,
+        statusBadge: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            backgroundColor: 'rgba(231, 12, 12, 0.1)', // Light green bg
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 100,
         },
-        orderId: {
-            fontSize: normalize(14),
-            fontWeight: "600",
-            color: colors.text,
-            fontFamily: colors.fontPrimary,
-            marginBottom: 3,
-            letterSpacing: -0.1,
+        statusIndicator: {
+            width: 6,
+            height: 6,
+            borderRadius: 3,
         },
-        statusRow: {
-            flexDirection: "row",
-            alignItems: "center",
+        statusText: {
+            fontSize: normalize(11),
+            fontWeight: '600',
+            color: colors.success,
+            textTransform: 'uppercase',
+            fontFamily: colors.fontSecondary,
+        },
+        orderContent: {
+            marginBottom: 14,
             gap: 6,
         },
-        statusDot: {
-            width: normalize(6),
-            height: normalize(6),
-            borderRadius: normalize(3),
-            backgroundColor: colors.success,
+        customerRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
         },
-        orderStatus: {
-            fontSize: normalize(11),
-            color: colors.textSecondary,
+        customerName: {
+            fontSize: normalize(14),
+            fontWeight: '600',
+            flex: 1,
+            fontFamily: colors.fontPrimary,
+        },
+        addressRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+        },
+        addressText: {
+            fontSize: normalize(13),
+            flex: 1,
             fontFamily: colors.fontSecondary,
-            fontWeight: "500",
         },
+        actionButtonsContainer: {
+            flexDirection: 'row',
+            gap: 10,
+        },
+        actionButton: {
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingVertical: 10,
+            borderRadius: 10,
+            gap: 8,
+        },
+        whatsappButton: {
+            backgroundColor: colors.success, // WhatsApp color
+            paddingHorizontal: 0,
+            flex: 0.6,
+        },
+        buttonText: {
+            fontWeight: '600',
+            fontSize: normalize(13),
+            fontFamily: colors.fontPrimary,
+        },
+        trackButton: {
+            // Background comes from props/inline style
+        },
+        trackButtonText: {
+            fontWeight: '600',
+            fontSize: normalize(13),
+            fontFamily: colors.fontPrimary,
+        }
     });
 
 export default ActualOrderCard;
