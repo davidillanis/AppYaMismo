@@ -264,7 +264,7 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
             return (
                 <View style={styles.centerWrapper}>
                     <View style={[styles.emptyIconCircle, { backgroundColor: colors.surfaceVariant }]}>
-                        <Ionicons name="bicycle" size={normalize(24)} color={colors.textSecondary} />
+                        <Ionicons name="bicycle" size={normalize(24)} color={colors.tertiary} />
                     </View>
                     <Text style={[styles.emptyTitle, { color: colors.text }]}>Sin pedidos en curso</Text>
                     <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>

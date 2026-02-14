@@ -2,6 +2,7 @@ import { Colors } from "@/constants/Colors";
 import { DealerSummaryResponseDTO } from "@/src/domain/entities/StatisticsEntity";
 import { dealerSummary } from "@/src/domain/services/StatisticsService";
 import { CarCardProps } from "@/src/domain/types/WidgetsType";
+import { mappingError } from "@/src/infrastructure/configuration/security/DecodeToken";
 import { normalizeScreen } from "@/src/infrastructure/configuration/utils/GlobalConfig";
 import { useAuth } from "@/src/presentation/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +15,7 @@ import {
     Text,
     View
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 const SummaryCard: React.FC<CarCardProps> = ({
     colors,
@@ -44,7 +46,7 @@ const SummaryCard: React.FC<CarCardProps> = ({
         }
 
         try {
-            const res = await dealerSummary(user.id);
+            const res = await dealerSummary(user.dealerId || 0);
 
             if (isMounted.current && res.data) {
                 setSummary(res.data);
@@ -63,7 +65,14 @@ const SummaryCard: React.FC<CarCardProps> = ({
                 ]).start();
             }
         } catch (error) {
-            console.error("Error fetching summary:", error);
+            let err = (mappingError(error).data as any).errors[0];
+            Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: err,
+                visibilityTime: 3000,
+                topOffset: normalize(60),
+            });
             if (isMounted.current) {
                 setSummary({
                     totalOrders: 0,
@@ -129,18 +138,18 @@ const SummaryCard: React.FC<CarCardProps> = ({
                     { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
                 ]}
             >
-                <View style={[styles.summaryCard, { backgroundColor: colors.surface}]}>
+                <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
                     <View style={[styles.summaryIcon, { backgroundColor: colors.primary }]}>
                         <Ionicons name="cash-outline" size={normalize(22)} color="#fff" />
                     </View>
                     <View style={styles.summaryInfo}>
                         <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Hoy</Text>
-                        <Text style={[styles.summaryValue, { color: colors.text}]}>S/ {formatCurrency(summary.todayRevenue)}</Text>
+                        <Text style={[styles.summaryValue, { color: colors.text }]}>S/ {formatCurrency(summary.todayRevenue)}</Text>
                         <Text style={[styles.summarySubtext, { color: colors.textSecondary }]}>{summary.todayOrders} entregas</Text>
                     </View>
                 </View>
 
-                <View style={[styles.summaryCard, { backgroundColor: colors.surface}]}>
+                <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
                     <View style={[styles.summaryIcon, { backgroundColor: "#10B981" }]}>
                         <Ionicons name="trending-up-outline" size={normalize(22)} color="#fff" />
                     </View>

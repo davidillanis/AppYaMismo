@@ -10,7 +10,7 @@ import { useAuth } from "@/src/presentation/context/AuthContext";
 import { formatDate } from "@/src/presentation/utils/OrderStatusUtils";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -217,6 +217,7 @@ const PendingTab = () => {
   const [connected, setConnected] = useState(false);
   const [orders, setOrders] = useState<OrderEntity[]>([]);
   const [loadingOrderId, setLoadingOrderId] = useState<number | null>(null);
+  const loadingOrderIdRef = useRef<number | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Record<number, boolean>>({});
   const orderSocket = useMemo(() => new OrderWebSocketService(), []);
 
@@ -236,6 +237,17 @@ const PendingTab = () => {
     }).then(data => setOrders(data.data?.content || [])).catch(error => console.log(mappingError(error.data)));
 
     orderSocket.onDealerOrdersUpdate = (order) => {
+      if (order.status !== EOrderStatus.PENDIENTE && loadingOrderIdRef.current === order.id) {
+        loadingOrderIdRef.current = null;
+        Toast.show({
+          type: "success",
+          text1: "Éxito",
+          text2: "Se aceptó exitosamente la orden",
+          visibilityTime: 3000,
+          topOffset: normalize(60),
+        });
+      }
+
       setOrders(prev => {
         if (order.status !== EOrderStatus.PENDIENTE) {
           return prev.filter(o => o.id !== order.id);
@@ -265,6 +277,7 @@ const PendingTab = () => {
 
     orderSocket.onOrderError = (error) => {
       setLoadingOrderId(null);
+      loadingOrderIdRef.current = null;
       Toast.show({
         type: 'warning',
         text1: 'Alerta',
@@ -276,11 +289,12 @@ const PendingTab = () => {
     orderSocket.connect(user?.dealerId || 0);
     setConnected(true);
     return () => orderSocket.disconnect();
-  }, [orderSocket, user]);
+  }, [orderSocket, user, normalize]);
 
 
   const updateStatus = (orderId: number, status: EOrderStatus) => {
     setLoadingOrderId(orderId);
+    loadingOrderIdRef.current = orderId;
     orderSocket.updateStatus({ orderId, dealerId: user?.dealerId || 0, status });
   };
 
