@@ -11,10 +11,10 @@ import { Drawer } from 'react-native-drawer-layout';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DrawerMenu from '../../components/widgets/DrawerMenu';
 import Header from '../../components/widgets/Header';
-import HistoryPage from './history/HistoryPage';
+// import HistoryPage from './history/HistoryPage';
 import HomePage from './home/HomePage';
 import OrderPage from './order/OrderPage';
-import StatisticsPage from './statistics/StatisticsPage';
+// import StatisticsPage from './statistics/StatisticsPage';
 
 const DealerIndex: React.FC = () => {
     const authority = "Repartidor";
@@ -27,7 +27,7 @@ const DealerIndex: React.FC = () => {
     const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
     const normalize = (size: number) => normalizeScreen(size, width);
     type DealerTab = "Order" | "Statistics" | "Home" | "History" | "Profile";
-    const [activeTab, setActiveTab] = useState<DealerTab>("Order");
+    const [activeTab, setActiveTab] = useState<DealerTab>("Home");
 
     const handleNavigate = (route: string) => {
         router.push(route as any);
@@ -44,9 +44,9 @@ const DealerIndex: React.FC = () => {
     ];
     const quickAccessItems: { icon: string; selectIcon: string; title: string; color: string; enabled: boolean; tab?: DealerTab; route?: string }[] = [
         { icon: 'receipt-outline', selectIcon: 'receipt', title: 'Pedidos', color: colors.warning, enabled: true, tab: 'Order' },
-        { icon: 'stats-chart-outline', selectIcon: 'stats-chart', title: 'Estadisticas', color: colors.warning, enabled: false, tab: 'Statistics' },
+        // { icon: 'stats-chart-outline', selectIcon: 'stats-chart', title: 'Estadisticas', color: colors.warning, enabled: false, tab: 'Statistics' },
         { icon: 'home-outline', selectIcon: 'home', title: 'Inicio', color: colors.warning, enabled: true, tab: 'Home' },
-        { icon: 'time-outline', selectIcon: 'time', title: 'Historial', color: colors.warning, enabled: false, tab: 'History' },
+        // { icon: 'time-outline', selectIcon: 'time', title: 'Historial', color: colors.warning, enabled: false, tab: 'History' },
         { icon: 'person-outline', selectIcon: 'person', title: 'Perfil', color: colors.warning, enabled: true, route: '/ProfileUser' },
     ];
 
@@ -87,8 +87,8 @@ const DealerIndex: React.FC = () => {
 
                     {activeTab === "History" || activeTab === "Statistics" || activeTab === "Home" ? (
                         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                            {activeTab === "History" && <HistoryPage />}
-                            {activeTab === "Statistics" && <StatisticsPage />}
+                            {/* {activeTab === "History" && <HistoryPage />} */}
+                            {/* {activeTab === "Statistics" && <StatisticsPage />} */}
                             {activeTab === "Home" && <HomePage />}
                         </ScrollView>
                     ) : (

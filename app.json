@@ -4,7 +4,7 @@
     "slug": "AppYaMismo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo2.png",
     "scheme": "appyamismo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
