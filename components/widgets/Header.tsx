@@ -14,6 +14,7 @@ const Header: React.FC<HeaderProps> = ({
   onProfilePress,
   title = APK_NAME,
   subTitle = `${APK_COMPANY_NAME} ${APK_CITY}`,
+  iconProfile: iconName,
 }) => {
   //const normalize = (size: number) => Math.round(PixelRatio.roundToNearestPixel(size * (screenWidth / 375)));
   const normalize = (size: number) => normalizeScreen(size, screenWidth);
@@ -40,10 +41,16 @@ const Header: React.FC<HeaderProps> = ({
           colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
           style={styles.profileGradient}
         >
-          <Image
-            source={require('@/assets/images/user.png')}
-            style={styles.logoImage}
-          />
+          {
+            iconName ? (
+              <Ionicons name={iconName} size={normalize(24)} color={colors.card} />
+            ) : (
+              <Image
+                source={require('@/assets/images/user.png')}
+                style={styles.logoImage}
+              />
+            )
+          }
         </LinearGradient>
       </TouchableOpacity>
     </LinearGradient>

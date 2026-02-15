@@ -12,7 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DrawerMenu from '../../components/widgets/DrawerMenu';
 import Header from '../../components/widgets/Header';
 // import HistoryPage from './history/HistoryPage';
+import Toast from 'react-native-toast-message';
 import HomePage from './home/HomePage';
+import NotificationPage from './notifications/NotificationPage';
 import OrderPage from './order/OrderPage';
 // import StatisticsPage from './statistics/StatisticsPage';
 
@@ -26,7 +28,7 @@ const DealerIndex: React.FC = () => {
     const router = useRouter();
     const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
     const normalize = (size: number) => normalizeScreen(size, width);
-    type DealerTab = "Order" | "Statistics" | "Home" | "History" | "Profile";
+    type DealerTab = "Order" | "Statistics" | "Home" | "History" | "Profile" | "Notifications";
     const [activeTab, setActiveTab] = useState<DealerTab>("Home");
 
     const handleNavigate = (route: string) => {
@@ -82,7 +84,15 @@ const DealerIndex: React.FC = () => {
                         colors={colors}
                         screenWidth={width}
                         onMenuPress={() => setIsDrawerOpen(true)}
-                        onProfilePress={() => router.push('/ProfileUser')}
+                        onProfilePress={() => {
+                            /**handleTabChange("Notifications") */
+                            Toast.show({
+                                type: 'info',
+                                text1: 'Notificaciones',
+                                text2: 'Funcionalidad en Desarrollo'
+                            });
+                        }}
+                        iconProfile="notifications-outline"
                     />
 
                     {activeTab === "History" || activeTab === "Statistics" || activeTab === "Home" ? (
@@ -94,6 +104,7 @@ const DealerIndex: React.FC = () => {
                     ) : (
                         <View style={styles.content}>
                             {activeTab === "Order" && <OrderPage />}
+                            {activeTab === "Notifications" && <NotificationPage />}
                         </View>
                     )}
                     <LinearGradient colors={[colors.surface, colors.background]} style={styles.footer}>

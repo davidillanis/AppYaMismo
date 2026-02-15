@@ -1,5 +1,6 @@
 // src/presentation/components/DrawerMenu.tsx
 import { Colors } from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 interface MenuItem {
   icon: string;
   title: string;
@@ -16,6 +17,7 @@ export interface DrawerMenuProps {
   onLogout: () => void;
 }
 
+export type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 // src/presentation/components/Header.tsx
 export interface HeaderProps {
   colors: typeof Colors.light;
@@ -24,6 +26,7 @@ export interface HeaderProps {
   onProfilePress?: () => void;
   title?: string;
   subTitle?: string;
+  iconProfile?: IoniconName;
 }
 
 // src/presentation/components/ProfileCard.tsx

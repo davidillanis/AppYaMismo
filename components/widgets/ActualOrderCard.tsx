@@ -283,7 +283,7 @@ const ActualOrderCard: React.FC<CarCardProps> = ({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.mainCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <View style={[styles.mainCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 {/* Card Header with Refresh */}
                 <View style={styles.cardHeader}>
                     <View style={styles.headerTitleRow}>
@@ -397,7 +397,7 @@ const createStyles = (
             borderRadius: 16,
             padding: 14,
             borderWidth: 1,
-            borderColor: 'rgba(0,0,0,0.04)', // Very subtle border
+            borderColor: 'rgba(31, 185, 108, 0.04)', // Very subtle border
         },
         orderHeaderRow: {
             flexDirection: 'row',

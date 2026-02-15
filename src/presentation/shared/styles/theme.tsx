@@ -104,7 +104,7 @@ export const darkTheme = {
     infoLight: "#1E3A8A",
 
     // Componentes específicos
-    card: "#CBD4C2",
+    card: "#333333",
     button: "#D8C99B",
     buttonSecondary: "#C9C9C9",
     icon: "#CBD5E1",

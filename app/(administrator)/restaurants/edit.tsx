@@ -70,6 +70,7 @@ export default function EditRestaurantScreen() {
 
   const initialValues = restaurantData
     ? {
+      userId: restaurantData.userEntity?.id,
       name: restaurantData.name,
       address: restaurantData.address,
       urlImagen: restaurantData.urlImagen,
