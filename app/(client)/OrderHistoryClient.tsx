@@ -53,6 +53,11 @@ export default function OrderHistoryClient() {
       "orderDetails.product.urlImage",
       "orderDetails.product.restaurant.name",
       "orderDetails.product.restaurant.address",
+
+      "dealer.userEntity.name",
+      "dealer.userEntity.lastName",
+      "dealer.userEntity.phone",
+      "dealer.userEntity.imageUrl",
     ],
   });
 

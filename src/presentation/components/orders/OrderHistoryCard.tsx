@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+// Asegúrate de importar DealerEntity correctamente
 import { OrderEntity } from "@/src/domain/entities/OrderEntity";
 import {
   formatDate,
@@ -9,12 +10,13 @@ import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   Image,
+  Linking,
   Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
   UIManager,
-  View,
+  View
 } from "react-native";
 
 if (
@@ -45,25 +47,39 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
     });
   };
 
+  // Botón de whatsapp
+  const handleOpenWhatsApp = (phone?: string) => {
+    if (!phone) return;
+
+    let cleanNumber = phone.replace(/[^\d]/g, '');
+
+    if (cleanNumber.length === 9) {
+      cleanNumber = `51${cleanNumber}`;
+    }
+
+    const url = `whatsapp://send?phone=${cleanNumber}&text=Hola, tengo una consulta sobre mi pedido.`;
+    
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (!supported) {
+          return Linking.openURL(`https://wa.me/${cleanNumber}`);
+        } else {
+          return Linking.openURL(url);
+        }
+      })
+      .catch((err) => console.error("Error al abrir WhatsApp", err));
+  };
+
   // --- LÓGICA MULTI-RESTAURANTE ---
-  // Analizamos los detalles para ver cuántos restaurantes únicos hay
   const { isMultiVendor, singleRestaurantInfo } = useMemo(() => {
     const restaurantNames = new Set<string>();
-    
-    // 1. Tipado explícito para que TS sepa qué esperar
     let firstRestaurant: { name: string; address?: string } | null = null;
-
-    // 2. Usamos (order.orderDetails || []) para evitar error si es null
     const details = order.orderDetails || [];
 
-    // 3. CAMBIO CLAVE: Usamos for...of en lugar de .forEach
     for (const detail of details) {
       const restaurant = detail.product?.restaurant;
-      
       if (restaurant?.name) {
         restaurantNames.add(restaurant.name);
-        
-        // Si aún no tenemos el primero, lo guardamos
         if (!firstRestaurant) {
             firstRestaurant = restaurant;
         }
@@ -75,6 +91,10 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
       singleRestaurantInfo: restaurantNames.size === 1 ? firstRestaurant : null,
     };
   }, [order.orderDetails]);
+
+  // 🔥 VALIDACIÓN DE SEGURIDAD PARA EL DEALER
+  // Esto evita errores si order.dealer existe pero userEntity no ha llegado
+  const dealerUser = order.dealer?.userEntity;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface}]}>
@@ -118,7 +138,7 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
         <View style={styles.detailsContainer}>
           <View style={styles.divider} />
 
-          {/* CASO A: UN SOLO RESTAURANTE -> MOSTRAR CABECERA GLOBAL */}
+          {/* CASO A: UN SOLO RESTAURANTE */}
           {!isMultiVendor && singleRestaurantInfo && (
             <View style={[styles.restaurantContainer, { backgroundColor: colors.buttonSecondary }]}>
               <View style={[styles.restaurantIcon, { backgroundColor: colors.card }]}>
@@ -137,7 +157,7 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
             </View>
           )}
 
-          {/* CASO B: MULTI RESTAURANTE -> MOSTRAR AVISO (Opcional) */}
+          {/* CASO B: MULTI RESTAURANTE */}
           {isMultiVendor && (
              <Text style={styles.multiVendorLabel}>Pedido Multi-Restaurante</Text>
           )}
@@ -155,17 +175,11 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
                   />
                 ) : (
                   <View style={[styles.productImage, styles.imagePlaceholder]}>
-                    <Ionicons
-                      name="fast-food-outline"
-                      size={20}
-                      color="#ccc"
-                    />
+                    <Ionicons name="fast-food-outline" size={20} color="#ccc" />
                   </View>
                 )}
 
                 <View style={{ flex: 1, paddingRight: 10 }}>
-                  
-                  {/* CASO B: MULTI RESTAURANTE -> MOSTRAR ETIQUETA POR PRODUCTO */}
                   {isMultiVendor && detail.product?.restaurant?.name && (
                     <View style={styles.inlineVendorBadge}>
                         <Ionicons name="storefront-outline" size={10} color="#666" style={{marginRight: 3}}/>
@@ -195,6 +209,54 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
             </Text>
           )}
 
+          {/* --- SECCIÓN DEALER (REPARTIDOR) --- */}
+          {/* Usamos la variable 'dealerUser' que definimos arriba */}
+          {dealerUser && (
+            <View style={styles.dealerContainer}>
+                <View style={styles.dealerHeader}>
+                    <Ionicons name="bicycle" size={16} color="#555" />
+                    <Text style={styles.dealerLabel}>Repartidor Asignado:</Text>
+                </View>
+                
+                <View style={styles.dealerInfoRow}>
+                    {/* Avatar */}
+                    <View style={styles.dealerAvatar}>
+                        {dealerUser.imageUrl ? (
+                            <Image 
+                               source={{ uri: dealerUser.imageUrl }} 
+                               style={{ width: 30, height: 30, borderRadius: 15 }} 
+                            />
+                        ) : (
+                            <Ionicons name="person" size={18} color="#fff" />
+                        )}
+                    </View>
+
+                    {/* Información */}
+                    <View style={{ marginLeft: 10, flex: 1 }}>
+                        <Text style={styles.dealerName}>
+                            {dealerUser.name} {dealerUser.lastName}
+                        </Text>
+                        {dealerUser.phone && (
+                            <Text style={styles.dealerPhone}>
+                                <Ionicons name="call-outline" size={10} color="#666" /> {dealerUser.phone}
+                            </Text>
+                        )}
+                    </View>
+
+                    {/* BOTÓN WHATSAPP */}
+                    {dealerUser.phone && (
+                        <TouchableOpacity 
+                            style={styles.whatsappButton}
+                            onPress={() => handleOpenWhatsApp(dealerUser.phone)} // Aquí TS ya sabe que phone es string
+                        >
+                            <Ionicons name="logo-whatsapp" size={22} color="#fff" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+          )}
+
+          {/* Botón de Seguimiento (si aplica) */}
           <TouchableOpacity
             style={[styles.trackButton, { backgroundColor: colors.primary }]}
             onPress={handleTrackOrder}
@@ -215,153 +277,46 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
   );
 };
 
+// ... (Tus estilos styles se mantienen igual, cópialos del anterior)
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginBottom: 12,
-    padding: 16,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  headerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
+  // ... (Pega aquí todos los estilos que me pasaste en tu mensaje anterior)
+  // Asegúrate de incluir dealerContainer, dealerHeader, dealerInfoRow, etc.
+  card: { backgroundColor: "#fff", borderRadius: 12, marginBottom: 12, padding: 16, elevation: 3, shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, },
+  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8, },
   orderId: { fontWeight: "bold", fontSize: 16, color: "#333" },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
+  statusBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, },
   statusText: { fontSize: 12, fontWeight: "bold" },
-  headerBottom: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+  headerBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", },
   dateText: { color: "#888", fontSize: 13 },
   totalContainer: { flexDirection: "row", alignItems: "center" },
   totalText: { fontWeight: "bold", fontSize: 16 },
-
-  // Detalles
   detailsContainer: { marginTop: 10 },
   divider: { height: 1, backgroundColor: "#eee", marginVertical: 10 },
-
-  // Estilos Restaurante (Global)
-  restaurantContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  restaurantIcon: {
-    marginRight: 10,
-    padding: 6,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    elevation: 1,
-  },
-  restaurantName: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#444",
-  },
-  restaurantAddress: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 2,
-  },
-  
-  // Estilos Multi-Vendor
-  multiVendorLabel: {
-    fontSize: 11,
-    color: "#666",
-    fontStyle: "italic",
-    marginBottom: 8,
-    alignSelf: 'flex-end'
-  },
-  inlineVendorBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2
-  },
-  inlineVendorText: {
-    fontSize: 10,
-    color: "#666",
-    fontWeight: "700",
-    textTransform: "uppercase"
-  },
-
-  sectionTitle: {
-    fontSize: 11,
-    color: "#aaa",
-    fontWeight: "700",
-    marginBottom: 10,
-    letterSpacing: 0.5,
-  },
-
-  productRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-    width: "100%",
-  },
-  productImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    marginRight: 12,
-    backgroundColor: "#f0f0f0",
-  },
-  imagePlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
+  restaurantContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#f9f9f9", padding: 10, borderRadius: 8, marginBottom: 15, },
+  restaurantIcon: { marginRight: 10, padding: 6, backgroundColor: "#fff", borderRadius: 20, elevation: 1, },
+  restaurantName: { fontSize: 14, fontWeight: "bold", color: "#444", },
+  restaurantAddress: { fontSize: 12, color: "#888", marginTop: 2, },
+  multiVendorLabel: { fontSize: 11, color: "#666", fontStyle: "italic", marginBottom: 8, alignSelf: 'flex-end' },
+  inlineVendorBadge: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
+  inlineVendorText: { fontSize: 10, color: "#666", fontWeight: "700", textTransform: "uppercase" },
+  sectionTitle: { fontSize: 11, color: "#aaa", fontWeight: "700", marginBottom: 10, letterSpacing: 0.5, },
+  productRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12, width: "100%", },
+  productImage: { width: 40, height: 40, borderRadius: 8, marginRight: 12, backgroundColor: "#f0f0f0", },
+  imagePlaceholder: { alignItems: "center", justifyContent: "center", },
   productName: { fontSize: 14, color: "#444" },
   productPrice: { fontSize: 14, fontWeight: "600", color: "#333" },
-  noteText: {
-    fontSize: 12,
-    color: "#888",
-    fontStyle: "italic",
-    marginTop: 2,
-  },
-  emptyDetails: {
-    fontStyle: "italic",
-    color: "#999",
-    textAlign: "center",
-    marginVertical: 5,
-  },
+  noteText: { fontSize: 12, color: "#888", fontStyle: "italic", marginTop: 2, },
+  emptyDetails: { fontStyle: "italic", color: "#999", textAlign: "center", marginVertical: 5, },
   footer: { alignItems: "flex-end" },
   paymentInfo: { fontSize: 12, color: "#666" },
-
-  trackButton: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 10,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  trackButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
-    marginRight: 5,
-  },
+  trackButton: { flexDirection: "row", justifyContent: "center", alignItems: "center", paddingVertical: 12, borderRadius: 8, marginTop: 10, elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, },
+  trackButtonText: { color: "#fff", fontWeight: "bold", fontSize: 14, marginRight: 5, },
+  dealerContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(0,0,0,0.05)", },
+  dealerHeader: { flexDirection: "row", alignItems: "center", marginBottom: 8, },
+  dealerLabel: { fontSize: 11, color: "#666", fontWeight: "bold", marginLeft: 6, textTransform: "uppercase", },
+  dealerInfoRow: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.5)", padding: 8, borderRadius: 10, },
+  dealerAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#ccc", justifyContent: "center", alignItems: "center", },
+  dealerName: { fontSize: 13, fontWeight: "bold", color: "#333", },
+  dealerPhone: { fontSize: 11, color: "#555", marginTop: 1, },
+  whatsappButton: { backgroundColor: "#25D366", width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center", marginLeft: 10, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 1 } },
 });

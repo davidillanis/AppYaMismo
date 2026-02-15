@@ -105,6 +105,7 @@ export interface CustomerEntity {
 export interface DealerEntity {
   id: number;
   name: string;
+  userEntity: UserEntity;
 }
 
 export interface DealerUserInfoDTO {
@@ -114,4 +115,5 @@ export interface DealerUserInfoDTO {
   name: string;
   lastName: string;
   dni: string;
+  phone: string;
 }

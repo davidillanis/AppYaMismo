@@ -35,14 +35,13 @@ export enum EOrderStatus {
   EN_CAMINO = "EN_CAMINO",
   CANCELADO = "CANCELADO",
   RECHAZADO = "RECHAZADO",
-  ENTREGADO = "ENTREGADO"
+  ENTREGADO = "ENTREGADO",
 }
 
 export enum EDiscountType {
   PERCENTAGE = "PERCENTAGE",
-  AMOUNT = "AMOUNT"
+  AMOUNT = "AMOUNT",
 }
-
 
 export interface DiscountRequestDTO {
   description: string;
@@ -70,7 +69,6 @@ export interface DiscountSummaryDTO {
   discount: number;
   type: EDiscountType;
 }
-
 
 export interface OrderDetailEntity {
   id?: number;

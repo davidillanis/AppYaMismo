@@ -15,7 +15,7 @@ const FILTER_OPTIONS = [
   { id: EOrderStatus.EN_CAMINO, label: "En Camino" },
   { id: EOrderStatus.ENTREGADO, label: "Entregados" },
   { id: EOrderStatus.CANCELADO, label: "Cancelados" },
-  //{ id: EOrderStatus.RECHAZADO, label: "Rechazados" },
+  { id: EOrderStatus.RECHAZADO, label: "Rechazados" },
 ];
 
 interface Props {
