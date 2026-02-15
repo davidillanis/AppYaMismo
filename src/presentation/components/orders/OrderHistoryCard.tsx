@@ -1,5 +1,4 @@
 import { Colors } from "@/constants/Colors";
-// Asegúrate de importar DealerEntity correctamente
 import { OrderEntity } from "@/src/domain/entities/OrderEntity";
 import {
   formatDate,
@@ -47,27 +46,12 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
     });
   };
 
-  // Botón de whatsapp
   const handleOpenWhatsApp = (phone?: string) => {
     if (!phone) return;
-
     let cleanNumber = phone.replace(/[^\d]/g, '');
-
-    if (cleanNumber.length === 9) {
-      cleanNumber = `51${cleanNumber}`;
-    }
-
-    const url = `whatsapp://send?phone=${cleanNumber}&text=Hola, tengo una consulta sobre mi pedido.`;
-    
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (!supported) {
-          return Linking.openURL(`https://wa.me/${cleanNumber}`);
-        } else {
-          return Linking.openURL(url);
-        }
-      })
-      .catch((err) => console.error("Error al abrir WhatsApp", err));
+    if (cleanNumber.length === 9) cleanNumber = `51${cleanNumber}`;
+    const url = `whatsapp://send?phone=${cleanNumber}&text=Hola, consulta sobre pedido #${order.id}.`;
+    Linking.openURL(url).catch(() => Linking.openURL(`https://wa.me/${cleanNumber}`));
   };
 
   // --- LÓGICA MULTI-RESTAURANTE ---
@@ -80,9 +64,7 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
       const restaurant = detail.product?.restaurant;
       if (restaurant?.name) {
         restaurantNames.add(restaurant.name);
-        if (!firstRestaurant) {
-            firstRestaurant = restaurant;
-        }
+        if (!firstRestaurant) firstRestaurant = restaurant;
       }
     }
 
@@ -92,231 +74,158 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
     };
   }, [order.orderDetails]);
 
-  // 🔥 VALIDACIÓN DE SEGURIDAD PARA EL DEALER
-  // Esto evita errores si order.dealer existe pero userEntity no ha llegado
   const dealerUser = order.dealer?.userEntity;
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface}]}>
-      {/* --- CABECERA (Siempre visible) --- */}
-      <TouchableOpacity onPress={toggleExpand} activeOpacity={0.7}>
-        <View style={styles.headerTop}>
-          <Text style={[styles.orderId, { color: colors.text}]}>Pedido #{order.id}</Text>
-          <View
-            style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}
-          >
-            <Ionicons
-              name={statusStyle.icon as any}
-              size={12}
-              color={statusStyle.text}
-              style={{ marginRight: 4 }}
-            />
+    <View style={styles.card}>
+      {/* CABECERA */}
+      <TouchableOpacity onPress={toggleExpand} activeOpacity={0.9} style={styles.touchableArea}>
+        
+        {/* Fila 1 */}
+        <View style={styles.headerRow}>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+             <View style={styles.iconBox}>
+                <Ionicons name="receipt" size={20} color="#4B5563" />
+             </View>
+             <View style={{marginLeft: 12}}>
+                <Text style={styles.orderId}>Pedido #{order.id}</Text>
+                <Text style={styles.dateText}>{formatDate(order.createdAt)}</Text>
+             </View>
+          </View>
+          
+          <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
             <Text style={[styles.statusText, { color: statusStyle.text }]}>
               {statusStyle.label}
             </Text>
           </View>
         </View>
 
-        <View style={styles.headerBottom}>
-          <Text style={[styles.dateText, { color: colors.textSecondary}]}>{formatDate(order.createdAt)}</Text>
-          <View style={styles.totalContainer}>
-            <Text style={[styles.totalText, { color: colors.text }]}>
-              S/. {(order.total || 0).toFixed(2)}
-            </Text>
-            <Ionicons
-              name={expanded ? "chevron-up" : "chevron-down"}
-              size={18}
-              color={colors.text}
-              style={{ marginLeft: 6 }}
-            />
-          </View>
+        {/* Fila 2: Precio */}
+        <View style={styles.priceRow}>
+            <View>
+                <Text style={styles.totalLabel}>Total</Text>
+                <Text style={styles.totalAmount}>S/. {(order.total || 0).toFixed(2)}</Text>
+            </View>
+            <View style={[styles.expandButton, expanded && styles.expandButtonActive]}>
+                <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={20} color={expanded ? "#E63946" : "#6B7280"} />
+            </View>
         </View>
+
       </TouchableOpacity>
 
-      {/* --- DETALLES --- */}
+      {/* ZONA EXPANDIDA */}
       {expanded && (
-        <View style={styles.detailsContainer}>
+        <View style={styles.expandedContent}>
           <View style={styles.divider} />
 
-          {/* CASO A: UN SOLO RESTAURANTE */}
+          {/* Restaurante */}
           {!isMultiVendor && singleRestaurantInfo && (
-            <View style={[styles.restaurantContainer, { backgroundColor: colors.buttonSecondary }]}>
-              <View style={[styles.restaurantIcon, { backgroundColor: colors.card }]}>
-                <Ionicons name="storefront" size={18} color={colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.restaurantName, { color: colors.textInverse }]}>
-                  {singleRestaurantInfo.name || "Restaurante"}
-                </Text>
-                {singleRestaurantInfo.address && (
-                  <Text style={[styles.restaurantAddress, { color: colors.textInverse }]} numberOfLines={1}>
-                    {singleRestaurantInfo.address}
-                  </Text>
-                )}
-              </View>
+            <View style={styles.restaurantRow}>
+               <Ionicons name="storefront" size={16} color="#E63946" style={{marginRight: 8}} />
+               <Text style={styles.restaurantName} numberOfLines={1}>
+                  {singleRestaurantInfo.name}
+               </Text>
             </View>
           )}
 
-          {/* CASO B: MULTI RESTAURANTE */}
-          {isMultiVendor && (
-             <Text style={styles.multiVendorLabel}>Pedido Multi-Restaurante</Text>
-          )}
-
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>PRODUCTOS</Text>
-
-          {order.orderDetails && order.orderDetails.length > 0 ? (
-            order.orderDetails.map((detail, index) => (
-              <View key={index} style={styles.productRow}>
-                {detail.product?.urlImage ? (
-                  <Image
-                    source={{ uri: detail.product.urlImage }}
-                    style={styles.productImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={[styles.productImage, styles.imagePlaceholder]}>
-                    <Ionicons name="fast-food-outline" size={20} color="#ccc" />
-                  </View>
-                )}
-
-                <View style={{ flex: 1, paddingRight: 10 }}>
-                  {isMultiVendor && detail.product?.restaurant?.name && (
-                    <View style={styles.inlineVendorBadge}>
-                        <Ionicons name="storefront-outline" size={10} color="#666" style={{marginRight: 3}}/>
-                        <Text style={styles.inlineVendorText}>
-                            {detail.product.restaurant.name}
-                        </Text>
-                    </View>
-                  )}
-
-                  <Text style={[styles.productName, { color: colors.textSecondary }]}>
-                    {detail.amount}x{" "}
-                    {detail.product?.name || "Producto desconocido"}
-                  </Text>
-                  {detail.note ? (
-                    <Text style={styles.noteText}>Nota: `{detail.note}`</Text>
-                  ) : null}
-                </View>
-
-                <Text style={[styles.productPrice, { color: colors.text }]}>
-                  S/. {detail.subTotal?.toFixed(2)}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyDetails}>
-              No hay detalles disponibles.
-            </Text>
-          )}
-
-          {/* --- SECCIÓN DEALER (REPARTIDOR) --- */}
-          {/* Usamos la variable 'dealerUser' que definimos arriba */}
-          {dealerUser && (
-            <View style={styles.dealerContainer}>
-                <View style={styles.dealerHeader}>
-                    <Ionicons name="bicycle" size={16} color="#555" />
-                    <Text style={styles.dealerLabel}>Repartidor Asignado:</Text>
-                </View>
-                
-                <View style={styles.dealerInfoRow}>
-                    {/* Avatar */}
-                    <View style={styles.dealerAvatar}>
-                        {dealerUser.imageUrl ? (
-                            <Image 
-                               source={{ uri: dealerUser.imageUrl }} 
-                               style={{ width: 30, height: 30, borderRadius: 15 }} 
-                            />
-                        ) : (
-                            <Ionicons name="person" size={18} color="#fff" />
-                        )}
-                    </View>
-
-                    {/* Información */}
-                    <View style={{ marginLeft: 10, flex: 1 }}>
-                        <Text style={styles.dealerName}>
-                            {dealerUser.name} {dealerUser.lastName}
-                        </Text>
-                        {dealerUser.phone && (
-                            <Text style={styles.dealerPhone}>
-                                <Ionicons name="call-outline" size={10} color="#666" /> {dealerUser.phone}
-                            </Text>
-                        )}
-                    </View>
-
-                    {/* BOTÓN WHATSAPP */}
-                    {dealerUser.phone && (
-                        <TouchableOpacity 
-                            style={styles.whatsappButton}
-                            onPress={() => handleOpenWhatsApp(dealerUser.phone)} // Aquí TS ya sabe que phone es string
-                        >
-                            <Ionicons name="logo-whatsapp" size={22} color="#fff" />
-                        </TouchableOpacity>
+          {/* Productos */}
+          <View style={styles.productsList}>
+            {order.orderDetails?.map((detail, index) => (
+              <View key={index} style={styles.productItem}>
+                <Text style={styles.qtyBadge}>{detail.amount}x</Text>
+                <View style={{flex: 1, paddingHorizontal: 10}}>
+                    <Text style={styles.productName} numberOfLines={1}>{detail.product?.name}</Text>
+                    {isMultiVendor && detail.product?.restaurant?.name && (
+                        <Text style={styles.vendorName}>{detail.product.restaurant.name}</Text>
                     )}
                 </View>
+                <Text style={styles.productPrice}>S/. {detail.subTotal?.toFixed(2)}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Repartidor */}
+          {dealerUser && (
+            <View style={styles.dealerBox}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <Image 
+                        source={{ uri: dealerUser.imageUrl || "https://via.placeholder.com/40" }} 
+                        style={styles.dealerAvatar} 
+                    />
+                    <View style={{marginLeft: 12}}>
+                        <Text style={styles.dealerLabel}>Tu Repartidor</Text>
+                        <Text style={styles.dealerName}>{dealerUser.name}</Text>
+                    </View>
+                </View>
+                {dealerUser.phone && (
+                    <TouchableOpacity onPress={() => handleOpenWhatsApp(dealerUser.phone)} style={styles.whatsappBtn}>
+                        <Ionicons name="logo-whatsapp" size={20} color="#FFF" />
+                    </TouchableOpacity>
+                )}
             </View>
           )}
 
-          {/* Botón de Seguimiento (si aplica) */}
-          <TouchableOpacity
-            style={[styles.trackButton, { backgroundColor: colors.primary }]}
+          {/* BOTÓN DE SEGUIMIENTO (Restaurado sin condición oculta) */}
+          <TouchableOpacity 
+            style={styles.mainActionButton} 
             onPress={handleTrackOrder}
           >
-            <Text style={styles.trackButtonText}>Ver Seguimiento</Text>
-            <Ionicons name="chevron-forward" size={16} color="#fff" />
+              <Text style={styles.actionText}>Ver Seguimiento</Text>
+              <Ionicons name="arrow-forward" size={18} color="#FFF" />
           </TouchableOpacity>
-
-          <View style={styles.divider} />
-          <View style={styles.footer}>
-            <Text style={[styles.paymentInfo, { color: colors.textSecondary }]}>
-              Pago contra entrega (Efectivo)
-            </Text>
+          
+          <View style={{marginTop: 15, alignItems: 'center'}}>
+             <Text style={styles.paymentInfo}>Pago contra entrega (Efectivo)</Text>
           </View>
+
         </View>
       )}
     </View>
   );
 };
 
-// ... (Tus estilos styles se mantienen igual, cópialos del anterior)
 const styles = StyleSheet.create({
-  // ... (Pega aquí todos los estilos que me pasaste en tu mensaje anterior)
-  // Asegúrate de incluir dealerContainer, dealerHeader, dealerInfoRow, etc.
-  card: { backgroundColor: "#fff", borderRadius: 12, marginBottom: 12, padding: 16, elevation: 3, shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, },
-  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8, },
-  orderId: { fontWeight: "bold", fontSize: 16, color: "#333" },
-  statusBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, },
-  statusText: { fontSize: 12, fontWeight: "bold" },
-  headerBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", },
-  dateText: { color: "#888", fontSize: 13 },
-  totalContainer: { flexDirection: "row", alignItems: "center" },
-  totalText: { fontWeight: "bold", fontSize: 16 },
-  detailsContainer: { marginTop: 10 },
-  divider: { height: 1, backgroundColor: "#eee", marginVertical: 10 },
-  restaurantContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#f9f9f9", padding: 10, borderRadius: 8, marginBottom: 15, },
-  restaurantIcon: { marginRight: 10, padding: 6, backgroundColor: "#fff", borderRadius: 20, elevation: 1, },
-  restaurantName: { fontSize: 14, fontWeight: "bold", color: "#444", },
-  restaurantAddress: { fontSize: 12, color: "#888", marginTop: 2, },
-  multiVendorLabel: { fontSize: 11, color: "#666", fontStyle: "italic", marginBottom: 8, alignSelf: 'flex-end' },
-  inlineVendorBadge: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  inlineVendorText: { fontSize: 10, color: "#666", fontWeight: "700", textTransform: "uppercase" },
-  sectionTitle: { fontSize: 11, color: "#aaa", fontWeight: "700", marginBottom: 10, letterSpacing: 0.5, },
-  productRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12, width: "100%", },
-  productImage: { width: 40, height: 40, borderRadius: 8, marginRight: 12, backgroundColor: "#f0f0f0", },
-  imagePlaceholder: { alignItems: "center", justifyContent: "center", },
-  productName: { fontSize: 14, color: "#444" },
-  productPrice: { fontSize: 14, fontWeight: "600", color: "#333" },
-  noteText: { fontSize: 12, color: "#888", fontStyle: "italic", marginTop: 2, },
-  emptyDetails: { fontStyle: "italic", color: "#999", textAlign: "center", marginVertical: 5, },
-  footer: { alignItems: "flex-end" },
-  paymentInfo: { fontSize: 12, color: "#666" },
-  trackButton: { flexDirection: "row", justifyContent: "center", alignItems: "center", paddingVertical: 12, borderRadius: 8, marginTop: 10, elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, },
-  trackButtonText: { color: "#fff", fontWeight: "bold", fontSize: 14, marginRight: 5, },
-  dealerContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(0,0,0,0.05)", },
-  dealerHeader: { flexDirection: "row", alignItems: "center", marginBottom: 8, },
-  dealerLabel: { fontSize: 11, color: "#666", fontWeight: "bold", marginLeft: 6, textTransform: "uppercase", },
-  dealerInfoRow: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.5)", padding: 8, borderRadius: 10, },
-  dealerAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#ccc", justifyContent: "center", alignItems: "center", },
-  dealerName: { fontSize: 13, fontWeight: "bold", color: "#333", },
-  dealerPhone: { fontSize: 11, color: "#555", marginTop: 1, },
-  whatsappButton: { backgroundColor: "#25D366", width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center", marginLeft: 10, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 1 } },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.03)",
+    overflow: 'hidden'
+  },
+  touchableArea: { padding: 16 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
+  iconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: "#F3F4F6", alignItems: 'center', justifyContent: 'center' },
+  orderId: { fontSize: 15, fontWeight: "700", color: "#111827" },
+  dateText: { fontSize: 12, color: "#9CA3AF", marginTop: 2, fontWeight: "500" },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  statusText: { fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+  totalLabel: { fontSize: 11, color: "#6B7280", textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5 },
+  totalAmount: { fontSize: 22, fontWeight: "900", color: "#111827", marginTop: 2 },
+  expandButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F9FAFB", alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: "#F3F4F6" },
+  expandButtonActive: { backgroundColor: "#FEF2F2", borderColor: "#FECACA" },
+  expandedContent: { backgroundColor: "#FAFAFA", borderTopWidth: 1, borderTopColor: "#F3F4F6", padding: 16 },
+  divider: { height: 1, marginBottom: 12 },
+  restaurantRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: "#FFFFFF", padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#E5E7EB" },
+  restaurantName: { fontSize: 14, fontWeight: '700', color: "#374151" },
+  productsList: { marginBottom: 16 },
+  productItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  qtyBadge: { fontSize: 12, fontWeight: '700', color: "#4B5563", backgroundColor: "#E5E7EB", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginRight: 8 },
+  productName: { fontSize: 14, color: "#374151", fontWeight: '500' },
+  vendorName: { fontSize: 10, color: "#E63946", fontWeight: '700', marginTop: 2 },
+  productPrice: { fontSize: 14, fontWeight: '700', color: "#111827" },
+  dealerBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: "#FFFFFF", padding: 12, borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB", marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.02, shadowRadius: 4, elevation: 1 },
+  dealerAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#E5E7EB" },
+  dealerLabel: { fontSize: 10, color: "#9CA3AF", fontWeight: '700', textTransform: 'uppercase' },
+  dealerName: { fontSize: 14, color: "#1F2937", fontWeight: '700' },
+  whatsappBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#25D366", alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: "#25D366", shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.3 },
+  mainActionButton: { backgroundColor: "#E63946", flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 14, borderRadius: 12, shadowColor: "#E63946", shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
+  actionText: { color: "#FFF", fontSize: 14, fontWeight: '800', marginRight: 8, letterSpacing: 0.5 },
+  paymentInfo: { fontSize: 11, color: "#9CA3AF", backgroundColor: "#F3F4F6", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }
 });

@@ -6,6 +6,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 interface Props {
   id: number;
   name: string;
+  categoria: string;
   urlImagen?: string;
   isSelected: boolean;
   onSelect: () => void;
@@ -14,6 +15,7 @@ interface Props {
 
 export const RestaurantCard: React.FC<Props> = ({
   name,
+  categoria,
   urlImagen,
   isSelected,
   onSelect,
@@ -47,6 +49,7 @@ export const RestaurantCard: React.FC<Props> = ({
       >
         {name}
       </Text>
+      <Text>{categoria}</Text>
     </TouchableOpacity>
   );
 };

@@ -15,29 +15,59 @@ export const CategoryChip: React.FC<Props> = ({
   return (
     <TouchableOpacity
       onPress={onSelect}
-      style={[styles.button, isSelected && styles.activeButton]}
+      activeOpacity={0.7}
+      style={[
+        styles.container,
+        isSelected ? styles.activeContainer : styles.inactiveContainer
+      ]}
     >
-      <Text style={[styles.text, isSelected && styles.activeText]}>{name}</Text>
+      <Text style={[
+        styles.text, 
+        isSelected ? styles.activeText : styles.inactiveText
+      ]}>
+        {name}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    backgroundColor: "#C4A676",
-    borderRadius: 20,
-    paddingHorizontal: 15,
+  container: {
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    marginRight: 10,
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+    // Alineación
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  activeButton: {
-    backgroundColor: "#A4243B",
+  // Estado Inactivo (Clean)
+  inactiveContainer: {
+    backgroundColor: "#F3F4F6", // Gris muy suave
+    borderColor: "#E5E7EB", // Borde sutil
   },
+  // Estado Activo (Brand)
+  activeContainer: {
+    backgroundColor: "#E63946", // TU ROJO DE MARCA
+    borderColor: "#E63946",
+    shadowColor: "#E63946",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  
   text: {
-    color: "#000",
+    fontSize: 13,
     fontWeight: "600",
+    letterSpacing: 0.3,
+  },
+  inactiveText: {
+    color: "#4B5563", // Gris oscuro legible
   },
   activeText: {
-    color: "#fff",
+    color: "#FFFFFF", // Blanco puro
+    fontWeight: "700",
   },
 });

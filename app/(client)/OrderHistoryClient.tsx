@@ -136,21 +136,40 @@ export default function OrderHistoryClient() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { 
+    flex: 1, 
+    backgroundColor: "#F4F6F8" // Gris azulado muy suave (Moderno)
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    backgroundColor: "#FFFFFF", // Header blanco limpio
+    // Sombra sutil para separar el header del contenido
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+    zIndex: 10,
   },
-  backButton: { padding: 5 },
-  title: { fontSize: 20, fontWeight: "bold" },
+  backButton: { 
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: "#F5F5F5" // Botón gris claro
+  },
+  title: { 
+    fontSize: 20, 
+    fontWeight: "800", 
+    color: "#1A1A1A", // Negro casi puro
+    letterSpacing: -0.5 
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  listContent: { padding: 15, paddingBottom: 20 },
+  listContent: { padding: 16, paddingBottom: 30 },
+  
+  // Empty State
   emptyContainer: { alignItems: "center", marginTop: 80 },
-  emptyText: { fontSize: 16, fontWeight: "bold", color: "#555", marginTop: 15 },
+  emptyText: { fontSize: 16, fontWeight: "600", color: "#888", marginTop: 15 },
 });

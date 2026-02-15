@@ -93,6 +93,8 @@ export default function CartClient() {
         })),
       };
 
+      console.log("ID DE VARIANTE EXITOSA EN PROD:", payload.orderDetails[0].variantId);
+
       // 4. Enviar a la API
       mutation.mutate(
         { payload },

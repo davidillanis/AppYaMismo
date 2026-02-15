@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity, // Importante para los botones
   View,
 } from "react-native";
 import { Drawer } from "react-native-drawer-layout";
@@ -32,109 +33,247 @@ import { CategoryChip } from "@/src/presentation/components/filters/CategoryChip
 import DrawerMenu from "../../components/widgets/DrawerMenu";
 import Header from "../../components/widgets/Header";
 
-// Modal
+// Modales
 import { ProductEntity, ProductVariantEntity } from "@/src/domain/entities/ProductEntity";
+import { CustomOrderModal } from "@/src/presentation/components/orders/CustomOrderModal"; // 🔥 1. IMPORTAR MODAL
 import { ProductVariantModal } from "@/src/presentation/components/products/ProductVariantModal";
 
+// --- INTERFAZ PROPS DEL HEADER ---
+interface HomeHeaderProps {
+  searchText: string;
+  setSearchText: (text: string) => void;
+  restaurantCategories: string[];
+  selectedRestCategory: string;
+  onSelectRestCategory: (cat: string) => void;
+  filteredRestaurants: any[];
+  selectedRestaurantId: number | undefined;
+  onSelectRestaurant: (item: any) => void;
+  loadingRest: boolean;
+  colors: any;
+  productCategories: string[];
+  selectedProductCategory: string;
+  onSelectProductCategory: (cat: string) => void;
+  selectedRestaurantName: string;
+  onOpenCustomOrder: (type: string) => void; // 🔥 2. NUEVO PROP
+}
+
+// --- COMPONENTE HEADER ---
+const HomeHeaderComponent = ({
+  searchText, setSearchText,
+  restaurantCategories, selectedRestCategory, onSelectRestCategory,
+  filteredRestaurants, selectedRestaurantId, onSelectRestaurant,
+  loadingRest, colors,
+  productCategories, selectedProductCategory, onSelectProductCategory,
+  selectedRestaurantName,
+  onOpenCustomOrder // Recibimos la función
+}: HomeHeaderProps) => {
+
+  // 🔥 3. DEFINIR SERVICIOS RÁPIDOS
+  const quickServices = [
+    { id: 'botica', name: 'Botica', icon: 'medkit', color: '#EF4444' }, 
+    { id: 'licores', name: 'Licores', icon: 'wine', color: '#8B5CF6' },
+    { id: 'bodega', name: 'Bodega', icon: 'basket', color: '#F59E0B' },
+    { id: 'mandadito', name: 'Mandadito', icon: 'bicycle', color: '#10B981' }, 
+  ];
+
+  return (
+    <View style={styles.headerContent}>
+      
+      {/* A. BUSCADOR */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={20} color="#6B7280" />
+        <TextInput
+          placeholder="¿Qué se te antoja hoy?"
+          style={styles.searchInput}
+          placeholderTextColor="#9CA3AF"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+      </View>
+
+      {/* 🔥 B. NUEVA SECCIÓN: BOTONES RÁPIDOS */}
+      <View style={{ marginTop: 24 }}>
+         <Text style={styles.sectionTitle}>¿Qué necesitas?</Text>
+         <View style={styles.quickServicesGrid}>
+            {quickServices.map((service) => (
+                <TouchableOpacity 
+                    key={service.id} 
+                    style={styles.serviceCard}
+                    onPress={() => onOpenCustomOrder(service.name)}
+                    activeOpacity={0.7}
+                >
+                    <View style={[styles.serviceIconBox, { backgroundColor: service.color + '10' }]}>
+                        <Ionicons name={service.icon as any} size={24} color={service.color} />
+                    </View>
+                    <Text style={styles.serviceText}>{service.name}</Text>
+                </TouchableOpacity>
+            ))}
+         </View>
+      </View>
+
+      {/* C. FILTRO MACRO (Categorías Restaurante) */}
+      <View style={{ marginTop: 24 }}>
+          <Text style={styles.sectionTitle}>Categorías</Text>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={restaurantCategories}
+            keyExtractor={(item) => item}
+            contentContainerStyle={{ paddingVertical: 10, paddingRight: 20 }}
+            renderItem={({ item }) => (
+                <CategoryChip
+                    name={item}
+                    isSelected={selectedRestCategory === item}
+                    onSelect={() => onSelectRestCategory(item)}
+                />
+            )}
+          />
+      </View>
+
+      {/* D. LISTA DE RESTAURANTES */}
+      <View style={{ marginTop: 10 }}>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+             <Text style={styles.subSectionTitle}>
+                 {selectedRestCategory === "Todos" ? "Restaurantes Destacados" : `Locales de ${selectedRestCategory}`}
+             </Text>
+          </View>
+          
+          {loadingRest ? (
+            <ActivityIndicator color={colors.primary} style={{height: 100}} />
+          ) : (
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={filteredRestaurants}
+              keyExtractor={(item) => String(item.id)}
+              contentContainerStyle={{ paddingRight: 20 }}
+              renderItem={({ item }) => (
+                <RestaurantCard
+                  id={item.id}
+                  name={item.name}
+                  categoria={item.restaurantTypes?.[0]?.name || "Variado"}
+                  urlImagen={item.urlImagen}
+                  isSelected={selectedRestaurantId === item.id}
+                  colors={colors}
+                  onSelect={() => onSelectRestaurant(item)}
+                />
+              )}
+              ListEmptyComponent={
+                  <Text style={{color: '#999', fontStyle: 'italic', padding: 10}}>
+                      No hay locales disponibles.
+                  </Text>
+              }
+            />
+          )}
+      </View>
+
+      {/* E. FILTRO MICRO (Productos) */}
+      {productCategories.length > 0 && (
+        <View style={{ marginTop: 20, marginBottom: 10 }}>
+            <Text style={styles.subSectionTitle}>
+                 Carta: {selectedRestaurantName}
+            </Text>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={productCategories}
+              keyExtractor={(item) => item}
+              contentContainerStyle={{ paddingRight: 20, paddingTop: 5, paddingBottom: 5 }}
+              renderItem={({ item }) => (
+                <CategoryChip
+                  name={item}
+                  isSelected={item === selectedProductCategory}
+                  onSelect={() => onSelectProductCategory(item)}
+                />
+              )}
+            />
+        </View>
+      )}
+    </View>
+  );
+};
+
+const HomeHeader = memo(HomeHeaderComponent);
+
+// --- COMPONENTE PRINCIPAL ---
 const ClienteIndex: React.FC = () => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "dark"];
-  const isDark = colorScheme === "dark";
   const router = useRouter();
   const { user, logout } = useAuth();
   const normalize = (size: number) => normalizeScreen(size, 390);
-  const styles = createStyles(colors, normalize);
 
-  // --- ESTADOS ---
+  // Estados
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
-  const [selectedCategory, setSelectedCategory] = useState("Todo");
   const [searchText, setSearchText] = useState("");
+  
+  // Filtros
+  const [selectedRestCategory, setSelectedRestCategory] = useState("Todos");
+  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+  const [selectedProductCategory, setSelectedProductCategory] = useState("Todo");
 
-  // --- ESTADOS PARA EL MODAL DE VARIANTES ---
+  // Modales
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedProductForModal, setSelectedProductForModal] = useState<ProductEntity | null>(null);
+  
+  // 🔥 4. ESTADOS PARA MODAL MANDADITOS
+  const [isCustomOrderModalVisible, setIsCustomOrderModalVisible] = useState(false);
+  const [customOrderType, setCustomOrderType] = useState("");
 
-  // --- CONTEXTO CARRITO ---
   const { addToCart } = useCart();
 
-  // --- DATOS 1: RESTAURANTES ---
+  // Data
   const { data: restData, isLoading: loadingRest } = useRestaurantList({
-    fields: [
-        "id", 
-        "name", 
-        "urlImagen", 
-        "enabled",        // <--- Importante: Aseguramos pedir este campo
-        "restaurantTypes.name", 
-        "products.name",
-        "products.description",
-        "products.urlImage",
-        "products.enabled",      
-        "products.variant.id",    
-        "products.variant.name",  
-        "products.variant.price", 
-        "products.variant.stock"
-    ],
+    fields: ["id", "name", "urlImagen", "enabled", "restaurantTypes.name"],
     size: 50,
-    enabled: true, // 1. Solicitamos solo activos al Backend
+    enabled: true, 
   });
-  const restaurantListRef = React.useRef<FlatList>(null);
-
-  const restaurants = React.useMemo(() => {
-    const apiRest = restData?.data?.content || [];
-    
-    // 🔥 2. FILTRO DE SEGURIDAD (Client-Side Fallback)
-    // Filtramos explícitamente los que tengan enabled === true para limpiar la lista
-    // por si el backend ignora el parámetro.
-    const activeRest = apiRest.filter((r: any) => r.enabled === true);
-
-    return [{ id: 0, name: "Todos", urlImagen: "" }, ...activeRest];
+  
+  // Lógica de Filtros (Igual que antes)
+  const rawActiveRestaurants = useMemo(() => {
+    return restData?.data?.content?.filter((r: any) => r.enabled === true) || [];
   }, [restData]);
 
-  useEffect(() => {
-    if (restaurants.length > 0 && !selectedRestaurant) {
-      setSelectedRestaurant(restaurants[0]);
+  const restaurantCategories = useMemo(() => {
+    const types = new Set<string>();
+    types.add("Todos");
+    rawActiveRestaurants.forEach((r: any) => {
+        const typeName = r.restaurantTypes?.[0]?.name;
+        if (typeName) types.add(typeName);
+    });
+    return Array.from(types);
+  }, [rawActiveRestaurants]);
+
+  const filteredRestaurants = useMemo(() => {
+    if (selectedRestCategory === "Todos") {
+        return [{ id: 0, name: "Todos", urlImagen: "" }, ...rawActiveRestaurants];
     }
-  }, [restaurants]);
-
-  // --- DATOS 2: PRODUCTOS ---
-  const { products, categories, loadMore, isLoadingInitial, isLoadingMore } =
-    useProductFeed(selectedRestaurant?.id, searchText, selectedCategory);
-
-  // 🔥 3. FILTRO DE PRODUCTOS ACTIVOS
-  const visibleProducts = React.useMemo(() => {
-    //return products.filter((p) => p.enabled !== false);
-    const activeRestaurantIds = new Set(
-      restaurants
-      .filter(r => r.id !== 0 )
-      .map(r => r.id)
+    return rawActiveRestaurants.filter((r: any) => 
+        r.restaurantTypes?.[0]?.name === selectedRestCategory
     );
+  }, [selectedRestCategory, rawActiveRestaurants]);
 
-    return products.filter((p) => {
-      const isProductEnabled = p.enabled !== false;
+  useEffect(() => {
+    if (filteredRestaurants.length > 0) {
+        const isValid = filteredRestaurants.find(r => r.id === selectedRestaurant?.id);
+        if (!isValid) setSelectedRestaurant(filteredRestaurants[0]);
+    }
+  }, [selectedRestCategory, filteredRestaurants]);
 
-      const isRentauranteActive = p.restaurant?.id
-      ? activeRestaurantIds.has(p.restaurant.id)
-      : true; // Si no tiene restaurante, lo consideramos activo (o lo manejamos según tu lógica)
+  const { products, categories: productCategories, loadMore, isLoadingInitial, isLoadingMore } =
+    useProductFeed(selectedRestaurant?.id, searchText, selectedProductCategory);
 
-      return isProductEnabled && isRentauranteActive;
+  const visibleProducts = useMemo(() => {
+    if (selectedRestaurant?.id === 0 && selectedRestCategory !== "Todos") {
+         return products.filter(p => p.restaurant?.restaurantTypes?.[0]?.name === selectedRestCategory);
+    }
+    return products;
+  }, [products, selectedRestCategory, selectedRestaurant]);
 
-    })
-  }, [products, restaurants]);
-
-  // --- HANDLERS ---
+  // Handlers
   const handleSelectRestaurant = (restaurant: any) => {
     setSelectedRestaurant(restaurant);
-    setSelectedCategory("Todo");
-    
-    // Scroll suave al seleccionar
-    const index = restaurants.findIndex((r) => r.id === restaurant.id);
-    if (index !== -1) {
-      // Pequeño timeout para asegurar que la lista esté lista si cambia muy rápido
-      setTimeout(() => {
-          restaurantListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
-      }, 100);
-    }
+    setSelectedProductCategory("Todo"); 
   };
 
   const handleProductPress = (product: ProductEntity) => {
@@ -146,76 +285,15 @@ const ClienteIndex: React.FC = () => {
     addToCart(product, variant, quantity);
   };
 
-  // --- RENDER HEADER ---
-  const renderHeader = () => (
-    <View style={styles.headerContent}>
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#0F172A" />
-        <TextInput
-          placeholder="Buscar plato..."
-          style={styles.searchInput}
-          placeholderTextColor="#666"
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-      </View>
-
-      <View style={{ marginVertical: 8 }}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={categories}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => (
-            <CategoryChip
-              name={item}
-              isSelected={item === selectedCategory}
-              onSelect={() => setSelectedCategory(item)}
-            />
-          )}
-          contentContainerStyle={{ paddingRight: 20 }}
-        />
-      </View>
-
-      <Text style={styles.sectionTitle}>Restaurantes</Text>
-      {loadingRest ? (
-        <ActivityIndicator color={colors.primary} />
-      ) : (
-        <FlatList
-          ref={restaurantListRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={restaurants}
-          keyExtractor={(item) => String(item.id)}
-          // Evita errores de scroll si la lista cambia dinámicamente
-          onScrollToIndexFailed={(info) => {
-             const wait = new Promise(resolve => setTimeout(resolve, 500));
-             wait.then(() => {
-               restaurantListRef.current?.scrollToIndex({ index: info.index, animated: true });
-             });
-          }}
-          renderItem={({ item }) => (
-            <RestaurantCard
-              id={item.id}
-              name={item.name}
-              urlImagen={item.urlImagen}
-              isSelected={selectedRestaurant?.id === item.id}
-              colors={colors}
-              onSelect={() => handleSelectRestaurant(item)}
-            />
-          )}
-        />
-      )}
-
-      <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-        Menú de: {selectedRestaurant?.name ?? "Seleccione..."}
-      </Text>
-    </View>
-  );
+  // 🔥 5. HANDLER PARA ABRIR MODAL
+  const handleOpenCustomOrder = (type: string) => {
+    setCustomOrderType(type);
+    setIsCustomOrderModalVisible(true);
+  };
 
   return (
     <>
-      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.primary} />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <Drawer
         open={isDrawerOpen}
         onOpen={() => setIsDrawerOpen(true)}
@@ -236,15 +314,13 @@ const ClienteIndex: React.FC = () => {
           />
         )}
       >
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: "#F9FAFB" }]}> 
           <Header
             colors={colors}
             screenWidth={390}
             onMenuPress={() => setIsDrawerOpen(true)}
             onProfilePress={() => router.push("/(tabs)/ProfileUser")}
           />
-
-          {renderHeader()}
 
           <FlatList
             data={visibleProducts}
@@ -258,12 +334,37 @@ const ClienteIndex: React.FC = () => {
                 onPress={handleProductPress} 
               />
             )}
+            ListHeaderComponent={
+                <HomeHeader
+                    searchText={searchText}
+                    setSearchText={setSearchText}
+                    restaurantCategories={restaurantCategories}
+                    selectedRestCategory={selectedRestCategory}
+                    onSelectRestCategory={setSelectedRestCategory}
+                    filteredRestaurants={filteredRestaurants}
+                    selectedRestaurantId={selectedRestaurant?.id}
+                    onSelectRestaurant={handleSelectRestaurant}
+                    loadingRest={loadingRest}
+                    colors={colors}
+                    productCategories={productCategories}
+                    selectedProductCategory={selectedProductCategory}
+                    onSelectProductCategory={setSelectedProductCategory}
+                    selectedRestaurantName={selectedRestaurant?.name === "Todos" ? "Mix Variado" : selectedRestaurant?.name}
+                    onOpenCustomOrder={handleOpenCustomOrder} // 🔥 PASAMOS LA FUNCIÓN
+                />
+            }
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
-            ListFooterComponent={isLoadingMore ? <ActivityIndicator size="small" color={colors.primary} /> : <View style={{ height: 100 }} />}
-            ListEmptyComponent={!isLoadingInitial ? <Text style={styles.emptyText}>No hay productos disponibles.</Text> : null}
+            ListFooterComponent={isLoadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{marginVertical: 20}} /> : <View style={{ height: 100 }} />}
+            ListEmptyComponent={!isLoadingInitial ? (
+                <View style={styles.emptyContainer}>
+                    <Ionicons name="fast-food-outline" size={48} color="#D1D5DB" />
+                    <Text style={styles.emptyText}>No hay productos disponibles.</Text>
+                </View>
+            ) : null}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
+            keyboardShouldPersistTaps="handled"
           />
 
           <CartFab colors={colors} />
@@ -275,31 +376,51 @@ const ClienteIndex: React.FC = () => {
             onClose={() => setIsModalVisible(false)}
             onAddToCart={handleAddToCartFromModal}
           />
+
+          {/* 🔥 6. RENDERIZAR MODAL MANDADITOS */}
+          <CustomOrderModal
+            visible={isCustomOrderModalVisible}
+            onClose={() => setIsCustomOrderModalVisible(false)}
+            serviceType={customOrderType}
+            colors={colors}
+          />
+
         </SafeAreaView>
       </Drawer>
     </>
   );
 };
 
-const createStyles = (colors: typeof Colors.light, normalize: (n: number) => number) =>
-  StyleSheet.create({
+const styles = StyleSheet.create({
     container: { flex: 1 },
-    listContent: { paddingHorizontal: 15 },
-    headerContent: { paddingTop: 6, paddingHorizontal: 15 },
+    listContent: { paddingBottom: 20 },
+    headerContent: { paddingHorizontal: 16, paddingTop: 10 },
+    
+    // Buscador
     searchContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#fff",
-      borderRadius: 18,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderWidth: 1,
-      borderColor: "#eee",
-      elevation: 1,
+      flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF",
+      borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
+      borderWidth: 1, borderColor: "#E5E7EB",
+      shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5, elevation: 2,
     },
-    searchInput: { flex: 1, marginLeft: 6, color: "#000", paddingVertical: 2, fontSize: 13 },
-    sectionTitle: { fontSize: normalize(18), fontWeight: "bold", color: colors.text, marginBottom: 10 },
-    emptyText: { textAlign: "center", marginTop: 50, color: colors.textSecondary, fontStyle: "italic" },
+    searchInput: { flex: 1, marginLeft: 10, color: "#111827", fontSize: 14, fontWeight: "500" },
+    
+    // Títulos
+    sectionTitle: { fontSize: 18, fontWeight: "800", color: "#111827", letterSpacing: -0.5 },
+    subSectionTitle: { fontSize: 13, fontWeight: "700", color: "#6B7280", textTransform: 'uppercase', letterSpacing: 0.5 },
+
+    // 🔥 Estilos Grid Servicios
+    quickServicesGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
+    serviceCard: { alignItems: 'center', width: '23%' },
+    serviceIconBox: { 
+        width: 58, height: 58, borderRadius: 18, 
+        justifyContent: 'center', alignItems: 'center', marginBottom: 6 
+    },
+    serviceText: { fontSize: 11, fontWeight: '600', color: '#4B5563', textAlign: 'center' },
+
+    // Empty State
+    emptyContainer: { alignItems: 'center', marginTop: 40 },
+    emptyText: { textAlign: "center", marginTop: 10, color: "#9CA3AF", fontSize: 14, fontWeight: "500" },
   });
 
 export default ClienteIndex;
