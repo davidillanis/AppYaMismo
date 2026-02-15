@@ -4,16 +4,16 @@ import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 
@@ -23,13 +23,13 @@ import { useAuth } from "@/src/presentation/context/AuthContext";
 import { useCreateOrder } from "@/src/presentation/hooks/useOrderMutation";
 
 // IDs REALES DE TU BBDD (Confirmados)
-const GENERIC_PRODUCT_ID = 6;  
-const GENERIC_VARIANT_ID = 12; 
+const GENERIC_PRODUCT_ID = 6;
+const GENERIC_VARIANT_ID = 12;
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  serviceType: string; 
+  serviceType: string;
   colors: typeof Colors.light;
 }
 
@@ -47,13 +47,23 @@ export const CustomOrderModal: React.FC<Props> = ({
   // Usamos el hook igual que en CartClient
   const mutation = useCreateOrder();
   const { user } = useAuth();
-  
-  const SERVICE_FEE = 10.00; 
+
+  const SERVICE_FEE = 10.00;
 
   const handleSendOrder = async () => {
-    if (!user?.id) {
-        Alert.alert("Error", "No se ha identificado al usuario.");
-        return;
+    if (!user) {
+      Alert.alert(
+        "Inicio de sesión requerido",
+        "Para realizar pedidos personalizados, necesitas una cuenta. ¿Deseas iniciar sesión ahora?",
+        [
+          { text: "Más tarde", style: "cancel" },
+          {
+            text: "Iniciar Sesión",
+            onPress: () => router.push("/(auth)/login") // Redirigir al login
+          },
+        ]
+      );
+      return;
     }
     if (!description.trim()) {
       Toast.show({ type: "error", text1: "Falta información", text2: "Describe tu pedido" });
@@ -92,7 +102,7 @@ export const CustomOrderModal: React.FC<Props> = ({
         orderDetails: [
           {
             productId: GENERIC_PRODUCT_ID,
-            variantId: GENERIC_VARIANT_ID, 
+            variantId: GENERIC_VARIANT_ID,
             amount: 1,
             unitPrice: SERVICE_FEE,
             note: finalNote,
@@ -109,17 +119,17 @@ export const CustomOrderModal: React.FC<Props> = ({
           onSuccess: (response) => {
             // Validamos con isSuccess según tu ResponseStatusDTO
             if (response.isSuccess) {
-                Toast.show({ 
-                    type: "success", 
-                    text1: "¡Pedido Exitoso!", 
-                    text2: "Tu mandadito ha sido registrado." 
-                });
-                onClose();
-                setDescription("");
-                setAddressReference("");
-                router.push("/OrderHistoryClient");
+              Toast.show({
+                type: "success",
+                text1: "¡Pedido Exitoso!",
+                text2: "Tu mandadito ha sido registrado."
+              });
+              onClose();
+              setDescription("");
+              setAddressReference("");
+              router.push("/OrderHistoryClient");
             } else {
-                Alert.alert("Error", response.message || "No se pudo registrar el pedido.");
+              Alert.alert("Error", response.message || "No se pudo registrar el pedido.");
             }
           },
           onError: (error: any) => {
@@ -150,12 +160,12 @@ export const CustomOrderModal: React.FC<Props> = ({
         style={styles.overlay}
       >
         <TouchableOpacity style={styles.dismissArea} onPress={onClose} activeOpacity={1} />
-        
+
         <View style={styles.container}>
           <View style={styles.header}>
             <View>
-                <Text style={styles.title}>Pedir {serviceType}</Text>
-                <Text style={styles.subtitle}>Lo que necesites hasta tu puerta</Text>
+              <Text style={styles.title}>Pedir {serviceType}</Text>
+              <Text style={styles.subtitle}>Lo que necesites hasta tu puerta</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="#1F2937" />
@@ -185,8 +195,8 @@ export const CustomOrderModal: React.FC<Props> = ({
             />
 
             <View style={styles.costRow}>
-                <Text style={styles.costLabel}>Tarifa de servicio:</Text>
-                <Text style={styles.costValue}>S/. {SERVICE_FEE.toFixed(2)}</Text>
+              <Text style={styles.costLabel}>Tarifa de servicio:</Text>
+              <Text style={styles.costValue}>S/. {SERVICE_FEE.toFixed(2)}</Text>
             </View>
           </View>
 
@@ -196,9 +206,9 @@ export const CustomOrderModal: React.FC<Props> = ({
             disabled={isLoading}
           >
             {isLoading ? (
-               <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#fff" />
             ) : (
-               <Text style={styles.actionButtonText}>Confirmar Mandadito</Text>
+              <Text style={styles.actionButtonText}>Confirmar Mandadito</Text>
             )}
           </TouchableOpacity>
         </View>

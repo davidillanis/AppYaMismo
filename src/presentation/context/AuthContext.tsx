@@ -155,29 +155,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   React.useEffect(() => {
-    const initAuth = async () => {
-      try {
-        setIsLoading(true);
-        const token = await AsyncStorage.getItem("accessToken");
-        const storedUser = await AsyncStorage.getItem("user");
-        const res = await validateToken(token + "");
+  const initAuth = async () => {
+    try {
+      setIsLoading(true);
+      const token = await AsyncStorage.getItem("accessToken");
+      const storedUser = await AsyncStorage.getItem("user");
 
-        if (token && storedUser && res.data) {
-          setAuthToken(token);
-          setUser(JSON.parse(storedUser));
-          //THIS IS SESSION IN STORAGE
-          redirectByRole(token);
-        } else {
-          logout(false);
-        }
-      } catch (e) {
-        console.log("Error restaurando sesión:", mappingError(e));
-      } finally {
-        setIsLoading(false);
+      // Si no hay token en storage, no intentamos validar
+      if (!token) {
+        await logout(false);
+        return;
       }
-    };
-    initAuth();
-  }, [redirectByRole]);
+
+      const res = await validateToken(token);
+
+      // 🟢 CAMBIO: Verificamos explícitamente res.isSuccess y res.data
+      if (res.isSuccess && res.data && storedUser) {
+        setAuthToken(token);
+        setUser(JSON.parse(storedUser));
+        redirectByRole(token);
+      } else {
+        // Si el token no es válido según el negocio, limpiamos
+        await logout(false);
+      }
+    } catch (e) {
+      // 🟢 SOLUCIÓN AL CRASH: Si la API da 500 (Internal Server Error)
+      // forzamos el cierre de sesión para limpiar estados y redirigir al login.
+      console.log("Error fatal restaurando sesión:", mappingError(e));
+      await logout(false); 
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  initAuth();
+}, [redirectByRole]);
 
   return (
     <AuthContext.Provider value={{ signIn, signUp, isLoading, user, logout }}>

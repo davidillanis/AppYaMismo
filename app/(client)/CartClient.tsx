@@ -41,9 +41,16 @@ export default function CartClient() {
 
   const handleCheckout = () => {
     if (!user?.id) {
-      Alert.alert("Error", "No se ha identificado al usuario.");
-      return;
-    }
+    Alert.alert(
+      "Inicio de sesión requerido",
+      "Para realizar un pedido, primero debes iniciar sesión o registrarte.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Ir al Login", onPress: () => router.push("/(auth)/login") }
+      ]
+    );
+    return;
+  }
 
     Alert.alert(
       "Confirmar Pedido",

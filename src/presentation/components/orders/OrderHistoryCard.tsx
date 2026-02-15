@@ -47,12 +47,24 @@ export const OrderHistoryCard: React.FC<Props> = ({ order, colors }) => {
   };
 
   const handleOpenWhatsApp = (phone?: string) => {
-    if (!phone) return;
-    let cleanNumber = phone.replace(/[^\d]/g, '');
-    if (cleanNumber.length === 9) cleanNumber = `51${cleanNumber}`;
-    const url = `whatsapp://send?phone=${cleanNumber}&text=Hola, consulta sobre pedido #${order.id}.`;
-    Linking.openURL(url).catch(() => Linking.openURL(`https://wa.me/${cleanNumber}`));
-  };
+  if (!phone) return;
+  
+  let cleanNumber = phone.replace(/[^\d]/g, '');
+  if (cleanNumber.length === 9) cleanNumber = `51${cleanNumber}`;
+
+  // 1. Definimos el mensaje en una constante
+  const message = `Hola, consulta sobre pedido #${order.id},${order.orderDetails?.[0]?.note || 'sin nota'}. Gracias!`;
+  
+  // 2. Codificamos el mensaje para que sea apto para URL
+  const encodedMessage = encodeURIComponent(message);
+
+  // 3. Construimos la URL con el mensaje codificado
+  const url = `whatsapp://send?phone=${cleanNumber}&text=${encodedMessage}`;
+  
+  Linking.openURL(url).catch(() => 
+    Linking.openURL(`https://wa.me/${cleanNumber}?text=${encodedMessage}`)
+  );
+};
 
   // --- LÓGICA MULTI-RESTAURANTE ---
   const { isMultiVendor, singleRestaurantInfo } = useMemo(() => {

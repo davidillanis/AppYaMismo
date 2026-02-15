@@ -33,6 +33,11 @@ export const getRoleRoutes = (
 };
 
 export const mappingError = (error: unknown): ErrorInfoType => {
+  // 🟢 SOLUCIÓN: Si error es null o undefined, retornamos un objeto base
+  if (!error) {
+    return { message: "Error inesperado (sin detalles)" } as ErrorInfoType;
+  }
+
   const axiosError = error as any;
 
   return {

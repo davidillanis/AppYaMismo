@@ -70,15 +70,15 @@ const HomeHeaderComponent = ({
 
   // 🔥 3. DEFINIR SERVICIOS RÁPIDOS
   const quickServices = [
-    { id: 'botica', name: 'Botica', icon: 'medkit', color: '#EF4444' }, 
+    { id: 'botica', name: 'Botica', icon: 'medkit', color: '#EF4444' },
     { id: 'licores', name: 'Licores', icon: 'wine', color: '#8B5CF6' },
     { id: 'bodega', name: 'Bodega', icon: 'basket', color: '#F59E0B' },
-    { id: 'mandadito', name: 'Mandadito', icon: 'bicycle', color: '#10B981' }, 
+    { id: 'mandadito', name: 'Mandadito', icon: 'bicycle', color: '#10B981' },
   ];
 
   return (
     <View style={styles.headerContent}>
-      
+
       {/* A. BUSCADOR */}
       <View style={styles.searchContainer}>
         <Ionicons name="search-outline" size={20} color="#6B7280" />
@@ -93,100 +93,100 @@ const HomeHeaderComponent = ({
 
       {/* 🔥 B. NUEVA SECCIÓN: BOTONES RÁPIDOS */}
       <View style={{ marginTop: 24 }}>
-         <Text style={styles.sectionTitle}>¿Qué necesitas?</Text>
-         <View style={styles.quickServicesGrid}>
-            {quickServices.map((service) => (
-                <TouchableOpacity 
-                    key={service.id} 
-                    style={styles.serviceCard}
-                    onPress={() => onOpenCustomOrder(service.name)}
-                    activeOpacity={0.7}
-                >
-                    <View style={[styles.serviceIconBox, { backgroundColor: service.color + '10' }]}>
-                        <Ionicons name={service.icon as any} size={24} color={service.color} />
-                    </View>
-                    <Text style={styles.serviceText}>{service.name}</Text>
-                </TouchableOpacity>
-            ))}
-         </View>
+        <Text style={styles.sectionTitle}>¿Qué necesitas?</Text>
+        <View style={styles.quickServicesGrid}>
+          {quickServices.map((service) => (
+            <TouchableOpacity
+              key={service.id}
+              style={styles.serviceCard}
+              onPress={() => onOpenCustomOrder(service.name)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.serviceIconBox, { backgroundColor: service.color + '10' }]}>
+                <Ionicons name={service.icon as any} size={24} color={service.color} />
+              </View>
+              <Text style={styles.serviceText}>{service.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {/* C. FILTRO MACRO (Categorías Restaurante) */}
       <View style={{ marginTop: 24 }}>
-          <Text style={styles.sectionTitle}>Categorías</Text>
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={restaurantCategories}
-            keyExtractor={(item) => item}
-            contentContainerStyle={{ paddingVertical: 10, paddingRight: 20 }}
-            renderItem={({ item }) => (
-                <CategoryChip
-                    name={item}
-                    isSelected={selectedRestCategory === item}
-                    onSelect={() => onSelectRestCategory(item)}
-                />
-            )}
-          />
+        <Text style={styles.sectionTitle}>Categorías</Text>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={restaurantCategories}
+          keyExtractor={(item) => item}
+          contentContainerStyle={{ paddingVertical: 10, paddingRight: 20 }}
+          renderItem={({ item }) => (
+            <CategoryChip
+              name={item}
+              isSelected={selectedRestCategory === item}
+              onSelect={() => onSelectRestCategory(item)}
+            />
+          )}
+        />
       </View>
 
       {/* D. LISTA DE RESTAURANTES */}
       <View style={{ marginTop: 10 }}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
-             <Text style={styles.subSectionTitle}>
-                 {selectedRestCategory === "Todos" ? "Restaurantes Destacados" : `Locales de ${selectedRestCategory}`}
-             </Text>
-          </View>
-          
-          {loadingRest ? (
-            <ActivityIndicator color={colors.primary} style={{height: 100}} />
-          ) : (
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={filteredRestaurants}
-              keyExtractor={(item) => String(item.id)}
-              contentContainerStyle={{ paddingRight: 20 }}
-              renderItem={({ item }) => (
-                <RestaurantCard
-                  id={item.id}
-                  name={item.name}
-                  categoria={item.restaurantTypes?.[0]?.name || "Variado"}
-                  urlImagen={item.urlImagen}
-                  isSelected={selectedRestaurantId === item.id}
-                  colors={colors}
-                  onSelect={() => onSelectRestaurant(item)}
-                />
-              )}
-              ListEmptyComponent={
-                  <Text style={{color: '#999', fontStyle: 'italic', padding: 10}}>
-                      No hay locales disponibles.
-                  </Text>
-              }
-            />
-          )}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <Text style={styles.subSectionTitle}>
+            {selectedRestCategory === "Todos" ? "Restaurantes Destacados" : `Locales de ${selectedRestCategory}`}
+          </Text>
+        </View>
+
+        {loadingRest ? (
+          <ActivityIndicator color={colors.primary} style={{ height: 100 }} />
+        ) : (
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={filteredRestaurants}
+            keyExtractor={(item) => String(item.id)}
+            contentContainerStyle={{ paddingRight: 20 }}
+            renderItem={({ item }) => (
+              <RestaurantCard
+                id={item.id}
+                name={item.name}
+                categoria={item.restaurantTypes?.[0]?.name || "Variado"}
+                urlImagen={item.urlImagen}
+                isSelected={selectedRestaurantId === item.id}
+                colors={colors}
+                onSelect={() => onSelectRestaurant(item)}
+              />
+            )}
+            ListEmptyComponent={
+              <Text style={{ color: '#999', fontStyle: 'italic', padding: 10 }}>
+                No hay locales disponibles.
+              </Text>
+            }
+          />
+        )}
       </View>
 
       {/* E. FILTRO MICRO (Productos) */}
       {productCategories.length > 0 && (
         <View style={{ marginTop: 20, marginBottom: 10 }}>
-            <Text style={styles.subSectionTitle}>
-                 Carta: {selectedRestaurantName}
-            </Text>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={productCategories}
-              keyExtractor={(item) => item}
-              contentContainerStyle={{ paddingRight: 20, paddingTop: 5, paddingBottom: 5 }}
-              renderItem={({ item }) => (
-                <CategoryChip
-                  name={item}
-                  isSelected={item === selectedProductCategory}
-                  onSelect={() => onSelectProductCategory(item)}
-                />
-              )}
-            />
+          <Text style={styles.subSectionTitle}>
+            Carta: {selectedRestaurantName}
+          </Text>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={productCategories}
+            keyExtractor={(item) => item}
+            contentContainerStyle={{ paddingRight: 20, paddingTop: 5, paddingBottom: 5 }}
+            renderItem={({ item }) => (
+              <CategoryChip
+                name={item}
+                isSelected={item === selectedProductCategory}
+                onSelect={() => onSelectProductCategory(item)}
+              />
+            )}
+          />
         </View>
       )}
     </View>
@@ -206,7 +206,7 @@ const ClienteIndex: React.FC = () => {
   // Estados
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
-  
+
   // Filtros
   const [selectedRestCategory, setSelectedRestCategory] = useState("Todos");
   const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
@@ -215,7 +215,7 @@ const ClienteIndex: React.FC = () => {
   // Modales
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedProductForModal, setSelectedProductForModal] = useState<ProductEntity | null>(null);
-  
+
   // 🔥 4. ESTADOS PARA MODAL MANDADITOS
   const [isCustomOrderModalVisible, setIsCustomOrderModalVisible] = useState(false);
   const [customOrderType, setCustomOrderType] = useState("");
@@ -226,9 +226,9 @@ const ClienteIndex: React.FC = () => {
   const { data: restData, isLoading: loadingRest } = useRestaurantList({
     fields: ["id", "name", "urlImagen", "enabled", "restaurantTypes.name"],
     size: 50,
-    enabled: true, 
+    enabled: true,
   });
-  
+
   // Lógica de Filtros (Igual que antes)
   const rawActiveRestaurants = useMemo(() => {
     return restData?.data?.content?.filter((r: any) => r.enabled === true) || [];
@@ -238,25 +238,25 @@ const ClienteIndex: React.FC = () => {
     const types = new Set<string>();
     types.add("Todos");
     rawActiveRestaurants.forEach((r: any) => {
-        const typeName = r.restaurantTypes?.[0]?.name;
-        if (typeName) types.add(typeName);
+      const typeName = r.restaurantTypes?.[0]?.name;
+      if (typeName) types.add(typeName);
     });
     return Array.from(types);
   }, [rawActiveRestaurants]);
 
   const filteredRestaurants = useMemo(() => {
     if (selectedRestCategory === "Todos") {
-        return [{ id: 0, name: "Todos", urlImagen: "" }, ...rawActiveRestaurants];
+      return [{ id: 0, name: "Todos", urlImagen: "" }, ...rawActiveRestaurants];
     }
-    return rawActiveRestaurants.filter((r: any) => 
-        r.restaurantTypes?.[0]?.name === selectedRestCategory
+    return rawActiveRestaurants.filter((r: any) =>
+      r.restaurantTypes?.[0]?.name === selectedRestCategory
     );
   }, [selectedRestCategory, rawActiveRestaurants]);
 
   useEffect(() => {
     if (filteredRestaurants.length > 0) {
-        const isValid = filteredRestaurants.find(r => r.id === selectedRestaurant?.id);
-        if (!isValid) setSelectedRestaurant(filteredRestaurants[0]);
+      const isValid = filteredRestaurants.find(r => r.id === selectedRestaurant?.id);
+      if (!isValid) setSelectedRestaurant(filteredRestaurants[0]);
     }
   }, [selectedRestCategory, filteredRestaurants]);
 
@@ -265,7 +265,7 @@ const ClienteIndex: React.FC = () => {
 
   const visibleProducts = useMemo(() => {
     if (selectedRestaurant?.id === 0 && selectedRestCategory !== "Todos") {
-         return products.filter(p => p.restaurant?.restaurantTypes?.[0]?.name === selectedRestCategory);
+      return products.filter(p => p.restaurant?.restaurantTypes?.[0]?.name === selectedRestCategory);
     }
     return products;
   }, [products, selectedRestCategory, selectedRestaurant]);
@@ -273,7 +273,7 @@ const ClienteIndex: React.FC = () => {
   // Handlers
   const handleSelectRestaurant = (restaurant: any) => {
     setSelectedRestaurant(restaurant);
-    setSelectedProductCategory("Todo"); 
+    setSelectedProductCategory("Todo");
   };
 
   const handleProductPress = (product: ProductEntity) => {
@@ -305,16 +305,22 @@ const ClienteIndex: React.FC = () => {
             user={user}
             screenWidth={390}
             authority="Cliente"
-            menuItems={[
-              { icon: "person-outline", title: "Mi perfil", route: "/PerfilAdmi" },
-              { icon: "receipt-outline", title: "Mis Pedidos", route: "/OrderHistoryClient" },
-            ]}
+            menuItems={
+              user
+                ? [
+                  { icon: "person-outline", title: "Mi perfil", route: "/PerfilAdmi" },
+                  { icon: "receipt-outline", title: "Mis Pedidos", route: "/OrderHistoryClient" },
+                ]
+                : [
+                  { icon: "log-in-outline", title: "Iniciar Sesión", route: "/(auth)/login" },
+                ]
+            }
             onNavigate={(r) => { router.push(r as any); setIsDrawerOpen(false); }}
             onLogout={logout}
           />
         )}
       >
-        <SafeAreaView style={[styles.container, { backgroundColor: "#F9FAFB" }]}> 
+        <SafeAreaView style={[styles.container, { backgroundColor: "#F9FAFB" }]}>
           <Header
             colors={colors}
             screenWidth={390}
@@ -331,36 +337,36 @@ const ClienteIndex: React.FC = () => {
                 colors={colors}
                 normalize={normalize}
                 restaurantName={selectedRestaurant?.id === 0 ? item.restaurant?.name : undefined}
-                onPress={handleProductPress} 
+                onPress={handleProductPress}
               />
             )}
             ListHeaderComponent={
-                <HomeHeader
-                    searchText={searchText}
-                    setSearchText={setSearchText}
-                    restaurantCategories={restaurantCategories}
-                    selectedRestCategory={selectedRestCategory}
-                    onSelectRestCategory={setSelectedRestCategory}
-                    filteredRestaurants={filteredRestaurants}
-                    selectedRestaurantId={selectedRestaurant?.id}
-                    onSelectRestaurant={handleSelectRestaurant}
-                    loadingRest={loadingRest}
-                    colors={colors}
-                    productCategories={productCategories}
-                    selectedProductCategory={selectedProductCategory}
-                    onSelectProductCategory={setSelectedProductCategory}
-                    selectedRestaurantName={selectedRestaurant?.name === "Todos" ? "Mix Variado" : selectedRestaurant?.name}
-                    onOpenCustomOrder={handleOpenCustomOrder} // 🔥 PASAMOS LA FUNCIÓN
-                />
+              <HomeHeader
+                searchText={searchText}
+                setSearchText={setSearchText}
+                restaurantCategories={restaurantCategories}
+                selectedRestCategory={selectedRestCategory}
+                onSelectRestCategory={setSelectedRestCategory}
+                filteredRestaurants={filteredRestaurants}
+                selectedRestaurantId={selectedRestaurant?.id}
+                onSelectRestaurant={handleSelectRestaurant}
+                loadingRest={loadingRest}
+                colors={colors}
+                productCategories={productCategories}
+                selectedProductCategory={selectedProductCategory}
+                onSelectProductCategory={setSelectedProductCategory}
+                selectedRestaurantName={selectedRestaurant?.name === "Todos" ? "Mix Variado" : selectedRestaurant?.name}
+                onOpenCustomOrder={handleOpenCustomOrder} // 🔥 PASAMOS LA FUNCIÓN
+              />
             }
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
-            ListFooterComponent={isLoadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{marginVertical: 20}} /> : <View style={{ height: 100 }} />}
+            ListFooterComponent={isLoadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 20 }} /> : <View style={{ height: 100 }} />}
             ListEmptyComponent={!isLoadingInitial ? (
-                <View style={styles.emptyContainer}>
-                    <Ionicons name="fast-food-outline" size={48} color="#D1D5DB" />
-                    <Text style={styles.emptyText}>No hay productos disponibles.</Text>
-                </View>
+              <View style={styles.emptyContainer}>
+                <Ionicons name="fast-food-outline" size={48} color="#D1D5DB" />
+                <Text style={styles.emptyText}>No hay productos disponibles.</Text>
+              </View>
             ) : null}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
@@ -392,35 +398,35 @@ const ClienteIndex: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    listContent: { paddingBottom: 20 },
-    headerContent: { paddingHorizontal: 16, paddingTop: 10 },
-    
-    // Buscador
-    searchContainer: {
-      flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF",
-      borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
-      borderWidth: 1, borderColor: "#E5E7EB",
-      shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5, elevation: 2,
-    },
-    searchInput: { flex: 1, marginLeft: 10, color: "#111827", fontSize: 14, fontWeight: "500" },
-    
-    // Títulos
-    sectionTitle: { fontSize: 18, fontWeight: "800", color: "#111827", letterSpacing: -0.5 },
-    subSectionTitle: { fontSize: 13, fontWeight: "700", color: "#6B7280", textTransform: 'uppercase', letterSpacing: 0.5 },
+  container: { flex: 1 },
+  listContent: { paddingBottom: 20 },
+  headerContent: { paddingHorizontal: 16, paddingTop: 10 },
 
-    // 🔥 Estilos Grid Servicios
-    quickServicesGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
-    serviceCard: { alignItems: 'center', width: '23%' },
-    serviceIconBox: { 
-        width: 58, height: 58, borderRadius: 18, 
-        justifyContent: 'center', alignItems: 'center', marginBottom: 6 
-    },
-    serviceText: { fontSize: 11, fontWeight: '600', color: '#4B5563', textAlign: 'center' },
+  // Buscador
+  searchContainer: {
+    flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF",
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
+    borderWidth: 1, borderColor: "#E5E7EB",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5, elevation: 2,
+  },
+  searchInput: { flex: 1, marginLeft: 10, color: "#111827", fontSize: 14, fontWeight: "500" },
 
-    // Empty State
-    emptyContainer: { alignItems: 'center', marginTop: 40 },
-    emptyText: { textAlign: "center", marginTop: 10, color: "#9CA3AF", fontSize: 14, fontWeight: "500" },
-  });
+  // Títulos
+  sectionTitle: { fontSize: 18, fontWeight: "800", color: "#111827", letterSpacing: -0.5 },
+  subSectionTitle: { fontSize: 13, fontWeight: "700", color: "#6B7280", textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  // 🔥 Estilos Grid Servicios
+  quickServicesGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
+  serviceCard: { alignItems: 'center', width: '23%' },
+  serviceIconBox: {
+    width: 58, height: 58, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 6
+  },
+  serviceText: { fontSize: 11, fontWeight: '600', color: '#4B5563', textAlign: 'center' },
+
+  // Empty State
+  emptyContainer: { alignItems: 'center', marginTop: 40 },
+  emptyText: { textAlign: "center", marginTop: 10, color: "#9CA3AF", fontSize: 14, fontWeight: "500" },
+});
 
 export default ClienteIndex;

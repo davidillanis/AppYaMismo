@@ -48,7 +48,7 @@ export default function OrderHistoryClient() {
       "orderDetails.id",          // Añade el ID del detalle (ayuda a JPA a iterar)
       "orderDetails.amount",
       "orderDetails.subTotal",
-      //"orderDetails.note",        // No olvides la nota que usas en el componente
+      "orderDetails.note",        // No olvides la nota que usas en el componente
       "orderDetails.product.name",
       "orderDetails.product.urlImage",
       "orderDetails.product.restaurant.name",

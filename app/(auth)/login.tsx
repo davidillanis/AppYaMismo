@@ -137,7 +137,7 @@ export default function LoginScreen() {
         }),
       ]).start();
     });
-  
+
     const hideSub = Keyboard.addListener('keyboardDidHide', () => {
       Animated.parallel([
         Animated.timing(scaleAnim, {
@@ -152,7 +152,7 @@ export default function LoginScreen() {
         }),
       ]).start();
     });
-  
+
     return () => {
       showSub.remove();
       hideSub.remove();
@@ -370,6 +370,16 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
+            {/* Explorar sin sesión */}
+              <TouchableOpacity
+                onPress={() => router.replace("../(client)/")}
+                style={styles.exploreContainer}
+              >
+                <Text style={styles.exploreText}>
+                  <Ionicons name="restaurant-outline" size={14} />  Explorar sin iniciar sesión
+                </Text>
+              </TouchableOpacity>
+
           </View>
         ) : (
           <View style={styles.formContainer}>
@@ -490,5 +500,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  exploreContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  exploreText: {
+    color: '#666',
+    fontSize: 13,
   },
 });
