@@ -42,7 +42,7 @@ import { ProductVariantModal } from "@/src/presentation/components/products/Prod
 
 const { width } = Dimensions.get('window');
 
-// --- INTERFAZ PROPS DEL HEADER ---
+// --- 🔥 1. INTERFAZ RE-DEFINIDA PARA ELIMINAR EL ERROR ---
 interface HomeHeaderProps {
   searchText: string;
   setSearchText: (text: string) => void;
@@ -61,7 +61,7 @@ interface HomeHeaderProps {
   onOpenCustomOrder: (type: string) => void;
 }
 
-// --- COMPONENTE HEADER (UI REDISEÑADA) ---
+// --- 2. COMPONENTE HEADER CON LÍMITES LATERALES ---
 const HomeHeaderComponent = ({
   searchText, setSearchText,
   restaurantCategories, selectedRestCategory, onSelectRestCategory,
@@ -84,7 +84,7 @@ const HomeHeaderComponent = ({
   return (
     <View style={styles.headerContent}>
       
-      {/* 1. BUSCADOR ESTILO PREMIUM */}
+      {/* BUSCADOR */}
       <View style={styles.searchWrapper}>
         <Ionicons name="search-outline" size={20} color={colors.textSecondary} />
         <TextInput
@@ -99,7 +99,7 @@ const HomeHeaderComponent = ({
         </TouchableOpacity>
       </View>
 
-      {/* 2. SERVICIOS RÁPIDOS */}
+      {/* SERVICIOS RÁPIDOS */}
       <View style={styles.sectionMargin}>
         <Text style={styles.sectionTitle}>¿Cómo te ayudamos?</Text>
         <View style={styles.quickServicesGrid}>
@@ -119,15 +119,15 @@ const HomeHeaderComponent = ({
         </View>
       </View>
 
-      {/* 3. CATEGORÍAS MACRO */}
+      {/* CATEGORÍAS (Limitado por margen de 20px) */}
       <View style={styles.sectionMargin}>
-        <Text style={styles.sectionTitle}>Categorías</Text>
+        <Text style={styles.sectionTitleNoMargin}>Categorías</Text>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
           data={restaurantCategories}
           keyExtractor={(item) => item}
-          contentContainerStyle={styles.horizontalScrollPadding}
+          style={styles.horizontalListBoundary}
           renderItem={({ item }) => (
             <CategoryChip
               name={item}
@@ -139,9 +139,9 @@ const HomeHeaderComponent = ({
         />
       </View>
 
-      {/* 4. RESTAURANTES DESTACADOS */}
+      {/* RESTAURANTES (Limitado por margen de 20px) */}
       <View style={styles.sectionMargin}>
-        <Text style={styles.subSectionTitle}>
+        <Text style={styles.sectionTitleNoMargin}>
           {selectedRestCategory === "Todos" ? "Restaurantes Destacados" : `Locales de ${selectedRestCategory}`}
         </Text>
 
@@ -153,7 +153,7 @@ const HomeHeaderComponent = ({
             showsHorizontalScrollIndicator={false}
             data={filteredRestaurants}
             keyExtractor={(item) => String(item.id)}
-            contentContainerStyle={styles.horizontalScrollPadding}
+            style={styles.horizontalListBoundary}
             renderItem={({ item }) => (
               <RestaurantCard
                 id={item.id}
@@ -165,14 +165,11 @@ const HomeHeaderComponent = ({
                 onSelect={() => onSelectRestaurant(item)}
               />
             )}
-            ListEmptyComponent={
-              <Text style={styles.emptyTextSmall}>No hay locales disponibles.</Text>
-            }
           />
         )}
       </View>
 
-      {/* 5. CARTA Y CATEGORÍAS MICRO */}
+      {/* CARTA Y CATEGORÍAS MICRO (Limitado por margen de 20px) */}
       {productCategories.length > 0 && (
         <View style={styles.productHeaderArea}>
           <View style={styles.divider} />
@@ -184,7 +181,7 @@ const HomeHeaderComponent = ({
             showsHorizontalScrollIndicator={false}
             data={productCategories}
             keyExtractor={(item) => item}
-            contentContainerStyle={styles.horizontalScrollPadding}
+            style={styles.horizontalListBoundary}
             renderItem={({ item }) => (
               <CategoryChip
                 name={item}
@@ -202,7 +199,7 @@ const HomeHeaderComponent = ({
 
 const HomeHeader = memo(HomeHeaderComponent);
 
-// --- COMPONENTE PRINCIPAL ---
+// --- 3. COMPONENTE PRINCIPAL ---
 const ClienteIndex: React.FC = () => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "dark"];
@@ -211,7 +208,6 @@ const ClienteIndex: React.FC = () => {
   const { user, logout } = useAuth();
   const normalize = (size: number) => normalizeScreen(size, 390);
 
-  // Estados
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedRestCategory, setSelectedRestCategory] = useState("Todos");
@@ -224,11 +220,9 @@ const ClienteIndex: React.FC = () => {
 
   const { addToCart } = useCart();
 
-  // Data
   const { data: restData, isLoading: loadingRest } = useRestaurantList({
     fields: ["id", "name", "urlImagen", "enabled", "restaurantTypes.name"],
-    size: 50,
-    enabled: true,
+    size: 50, enabled: true,
   });
 
   const rawActiveRestaurants = useMemo(() => {
@@ -246,12 +240,11 @@ const ClienteIndex: React.FC = () => {
   }, [rawActiveRestaurants]);
 
   const filteredRestaurants = useMemo(() => {
-    if (selectedRestCategory === "Todos") {
-      return [{ id: 0, name: "Todos", urlImagen: "" }, ...rawActiveRestaurants];
-    }
-    return rawActiveRestaurants.filter((r: any) =>
-      r.restaurantTypes?.[0]?.name === selectedRestCategory
+    const list = rawActiveRestaurants.filter((r: any) =>
+      selectedRestCategory === "Todos" || r.restaurantTypes?.[0]?.name === selectedRestCategory
     );
+    // Restauramos el botón "Todos"
+    return [{ id: 0, name: "Todos", urlImagen: "" }, ...list];
   }, [selectedRestCategory, rawActiveRestaurants]);
 
   useEffect(() => {
@@ -259,7 +252,7 @@ const ClienteIndex: React.FC = () => {
       const isValid = filteredRestaurants.find(r => r.id === selectedRestaurant?.id);
       if (!isValid) setSelectedRestaurant(filteredRestaurants[0]);
     }
-  }, [selectedRestCategory, filteredRestaurants]);
+  }, [selectedRestCategory, filteredRestaurants, selectedRestaurant?.id]);
 
   const { products, categories: productCategories, loadMore, isLoadingInitial, isLoadingMore } =
     useProductFeed(selectedRestaurant?.id, searchText, selectedProductCategory);
@@ -271,9 +264,6 @@ const ClienteIndex: React.FC = () => {
     return products;
   }, [products, selectedRestCategory, selectedRestaurant]);
 
-  // FIX: El número de columnas debe estar atado a una Key única
-  const numColumns = 1;
-
   return (
     <>
       <StatusBar barStyle={colorScheme === 'dark' ? "light-content" : "dark-content"} backgroundColor={colors.background} />
@@ -284,196 +274,99 @@ const ClienteIndex: React.FC = () => {
         drawerType="front"
         renderDrawerContent={() => (
           <DrawerMenu
-            colors={colors}
-            user={user}
-            screenWidth={390}
-            authority="Cliente"
-            menuItems={
-              user
-                ? [
-                  { icon: "person-outline", title: "Mi perfil", route: "/ProfileUser" },
-                  { icon: "receipt-outline", title: "Mis Pedidos", route: "/OrderHistoryClient" },
-                ]
-                : [
-                  { icon: "log-in-outline", title: "Iniciar Sesión", route: "/(auth)/login" },
-                ]
-            }
-            onNavigate={(r) => { router.push(r as any); setIsDrawerOpen(false); }}
+            colors={colors} user={user} screenWidth={390} authority="Cliente"
+            menuItems={user ? [
+              { icon: "person-outline", title: "Mi perfil", route: "/ProfileUser" },
+              { icon: "receipt-outline", title: "Mis Pedidos", route: "/OrderHistoryClient" },
+            ] : [
+              { icon: "log-in-outline", title: "Iniciar Sesión", route: "/(auth)/login" },
+            ]}
+            onNavigate={(r: string) => { router.push(r as any); setIsDrawerOpen(false); }}
             onLogout={logout}
           />
         )}
       >
-        {/*<SafeAreaView style={[styles.container, { backgroundColor: '#F8F9FA' }]}> */}
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-          <Header
-            colors={colors}
-            screenWidth={390}
-            onMenuPress={() => setIsDrawerOpen(true)}
-            onProfilePress={() => router.push("/(tabs)/ProfileUser")}
-          />
+          <Header colors={colors} screenWidth={390} onMenuPress={() => setIsDrawerOpen(true)} onProfilePress={() => router.push("/(tabs)/ProfileUser")} />
 
           <FlatList
-            key={`list-${numColumns}`} // 🔥 FIX: Evita el error Invariant Violation
-            numColumns={numColumns}
+            key="list-1"
+            numColumns={1}
             data={visibleProducts}
             keyExtractor={(item) => String(item.id)}
             renderItem={({ item }) => (
               <ProductCard
-                product={item}
-                colors={colors}
-                normalize={normalize}
+                product={item} colors={colors} normalize={normalize}
                 restaurantName={selectedRestaurant?.id === 0 ? item.restaurant?.name : undefined}
-                onPress={(product) => {
-                  setSelectedProductForModal(product);
-                  setIsModalVisible(true);
-                }}
+                onPress={(product) => { setSelectedProductForModal(product); setIsModalVisible(true); }}
               />
             )}
             ListHeaderComponent={
               <HomeHeader
-                searchText={searchText}
-                setSearchText={setSearchText}
-                restaurantCategories={restaurantCategories}
-                selectedRestCategory={selectedRestCategory}
-                onSelectRestCategory={setSelectedRestCategory}
-                filteredRestaurants={filteredRestaurants}
-                selectedRestaurantId={selectedRestaurant?.id}
-                onSelectRestaurant={(r) => {
-                  setSelectedRestaurant(r);
-                  setSelectedProductCategory("Todo");
-                }}
-                loadingRest={loadingRest}
-                colors={colors}
-                productCategories={productCategories}
-                selectedProductCategory={selectedProductCategory}
+                searchText={searchText} setSearchText={setSearchText}
+                restaurantCategories={restaurantCategories} selectedRestCategory={selectedRestCategory}
+                onSelectRestCategory={setSelectedRestCategory} filteredRestaurants={filteredRestaurants}
+                selectedRestaurantId={selectedRestaurant?.id} 
+                onSelectRestaurant={(r: any) => { setSelectedRestaurant(r); setSelectedProductCategory("Todo"); }}
+                loadingRest={loadingRest} colors={colors}
+                productCategories={productCategories} selectedProductCategory={selectedProductCategory}
                 onSelectProductCategory={setSelectedProductCategory}
                 selectedRestaurantName={selectedRestaurant?.name === "Todos" ? "Mix Variado" : selectedRestaurant?.name}
-                onOpenCustomOrder={(type) => {
-                  setCustomOrderType(type);
-                  setIsCustomOrderModalVisible(true);
-                }}
+                onOpenCustomOrder={(type: string) => { setCustomOrderType(type); setIsCustomOrderModalVisible(true); }}
               />
             }
             onEndReached={loadMore}
-            onEndReachedThreshold={0.5}
             ListFooterComponent={isLoadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 20 }} /> : <View style={{ height: 100 }} />}
-            ListEmptyComponent={!isLoadingInitial ? (
-              <View style={styles.emptyContainer}>
-                <Ionicons name="fast-food-outline" size={60} color={colors.textTertiary} />
-                <Text style={styles.emptyText}>No hay productos disponibles por ahora.</Text>
-              </View>
-            ) : null}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
             keyboardShouldPersistTaps="handled"
           />
 
           <CartFab colors={colors} />
-
-          <ProductVariantModal
-            visible={isModalVisible}
-            product={selectedProductForModal}
-            colors={colors}
-            onClose={() => setIsModalVisible(false)}
-            onAddToCart={(p, v, q) => addToCart(p, v, q)}
-          />
-
-          <CustomOrderModal
-            visible={isCustomOrderModalVisible}
-            onClose={() => setIsCustomOrderModalVisible(false)}
-            serviceType={customOrderType}
-            colors={colors}
-          />
+          <ProductVariantModal visible={isModalVisible} product={selectedProductForModal} colors={colors} onClose={() => setIsModalVisible(false)} onAddToCart={addToCart} />
+          <CustomOrderModal visible={isCustomOrderModalVisible} onClose={() => setIsCustomOrderModalVisible(false)} serviceType={customOrderType} colors={colors} />
         </SafeAreaView>
       </Drawer>
     </>
   );
 };
 
-// --- STYLES PROFESIONALES ---
+// --- STYLES CON LÍMITES DE MARGEN ---
 const createStyles = (colors: MappedPalette) => StyleSheet.create({
   container: { flex: 1 },
   listContent: { paddingBottom: 20 },
   headerContent: { paddingTop: 10 },
-
-  // Buscador Moderno
   searchWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 52,
-    marginHorizontal: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    flexDirection: "row", alignItems: "center", backgroundColor: colors.surface,
+    borderRadius: 16, paddingHorizontal: 16, height: 52, marginHorizontal: 20,
+    borderWidth: 1, borderColor: colors.border, elevation: 3,
   },
   searchInput: { flex: 1, marginLeft: 10, color: colors.text, fontSize: 15, fontWeight: "500" },
   filterIconButton: { padding: 4 },
-
-  // Tipografía y Secciones
-  sectionMargin: { marginTop: 24 },
-  sectionTitle: { 
-    fontSize: 20, 
-    fontWeight: "800", 
-    color: colors.text, 
-    letterSpacing: -0.5, 
-    marginLeft: 20, 
-    marginBottom: 12 
+  sectionMargin: { 
+    marginTop: 24, 
+    marginHorizontal: 20 // 🔥 LÍMITE LATERAL PARA EL CONTENIDO HORIZONTAL
   },
-  subSectionTitle: { 
-    fontSize: 16, 
-    fontWeight: "700", 
-    color: colors.text, 
-    marginLeft: 20, 
-    marginBottom: 12 
+  sectionTitle: { fontSize: 20, fontWeight: "800", color: colors.text, letterSpacing: -0.5, marginBottom: 12 },
+  sectionTitleNoMargin: { fontSize: 20, fontWeight: "800", color: colors.text, letterSpacing: -0.5, marginBottom: 12 },
+  horizontalListBoundary: {
+    overflow: 'hidden', // Evita que los elementos se dibujen fuera del margen de 20px
   },
-  horizontalScrollPadding: { paddingLeft: 20, paddingRight: 10 },
-
-  // Servicios Rápidos (Grid)
-  quickServicesGrid: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    paddingHorizontal: 20 
-  },
-  serviceCard: { alignItems: 'center', width: (width - 60) / 4 },
+  quickServicesGrid: { flexDirection: 'row', justifyContent: 'space-between' },
+  serviceCard: { alignItems: 'center', width: (width - 80) / 4 },
   serviceIconBox: {
-    width: 62,
-    height: 62,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
+    width: 58, height: 58, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 8, elevation: 4,
   },
   serviceText: { fontSize: 11, fontWeight: '700', color: colors.textSecondary, textAlign: 'center' },
-
-  // Carta de Productos
-  productHeaderArea: { marginTop: 15, paddingBottom: 10 },
-  divider: { height: 1, backgroundColor: colors.border, marginHorizontal: 20, marginBottom: 20 },
-  menuHeadline: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginLeft: 20,
-    marginBottom: 10
+  productHeaderArea: { 
+    marginTop: 15, 
+    paddingBottom: 10,
+    marginHorizontal: 20 
   },
-
-  // Empty State
-  emptyContainer: { alignItems: 'center', marginTop: 50, opacity: 0.6 },
-  emptyText: { textAlign: "center", marginTop: 15, color: colors.textSecondary, fontSize: 15, fontWeight: "600" },
-  emptyTextSmall: { color: colors.textSecondary, fontStyle: 'italic', marginLeft: 20 }
+  divider: { height: 1, backgroundColor: colors.border, marginBottom: 20 },
+  menuHeadline: {
+    fontSize: 13, fontWeight: '800', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10
+  },
 });
 
 export default ClienteIndex;

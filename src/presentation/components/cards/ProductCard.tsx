@@ -18,7 +18,6 @@ export const ProductCard: React.FC<Props> = ({
   normalize,
   onPress,
 }) => {
-  // 1. Memorizamos los estilos para que tengan acceso a 'colors' y sean eficientes
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const variants = product.variant || [];
@@ -28,121 +27,187 @@ export const ProductCard: React.FC<Props> = ({
     <TouchableOpacity 
       style={styles.card}
       onPress={() => onPress(product)}
-      activeOpacity={0.9}
+      activeOpacity={0.95}
     >
-      <View style={styles.content}>
-        <View style={styles.textContainer}>
-          <Text style={[styles.name, { fontSize: normalize(15) }]} numberOfLines={2}>
+      {/* 1. SECCIÓN DE IMAGEN (Full width superior) */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: product.urlImage || "https://via.placeholder.com/400x250" }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        {/* Badge de Promoción (Placeholder) */}
+        <View style={styles.promoBadge}>
+          <Ionicons name="flash" size={12} color="#FFF" />
+          <Text style={styles.promoText}>Envío Rápido</Text>
+        </View>
+        
+        {/* Botón flotante "+" */}
+        <TouchableOpacity 
+          style={[styles.floatingAddButton, { backgroundColor: colors.primary }]}
+          onPress={() => onPress(product)}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* 2. SECCIÓN DE INFORMACIÓN (Debajo de la imagen) */}
+      <View style={styles.footerContent}>
+        <View style={styles.headerRow}>
+          <Text style={[styles.name, { fontSize: normalize(17) }]} numberOfLines={1}>
             {product.name}
           </Text>
-          
-          <Text style={styles.description} numberOfLines={2}>
-            {restaurantName || product.restaurant?.name || "Disponible ahora"}
-          </Text>
+          {/* Rating (Simulado para nivel profesional) */}
+          <View style={styles.ratingBadge}>
+            <Ionicons name="star" size={14} color="#FFB800" />
+            <Text style={styles.ratingText}>4.8</Text>
+          </View>
+        </View>
+        
+        <Text style={styles.restaurantName} numberOfLines={1}>
+          {restaurantName || product.restaurant?.name || "Restaurante local"}
+        </Text>
 
-          <View style={styles.priceContainer}>
-            <Text style={[styles.price, { color: colors.primary, fontSize: normalize(16) }]}>
+        <View style={styles.detailsRow}>
+          <View style={styles.priceBox}>
+            <Text style={[styles.price, { color: colors.primary, fontSize: normalize(18) }]}>
               {minPrice > 0 ? `S/ ${minPrice.toFixed(2)}` : "Consultar"}
             </Text>
             {variants.length > 1 && (
               <Text style={styles.variantsLabel}>(más opciones)</Text>
             )}
           </View>
-        </View>
-
-        <View style={styles.imageWrapper}>
-          <Image
-            source={{ uri: product.urlImage || "https://via.placeholder.com/150" }}
-            style={styles.image}
-            resizeMode="cover"
-          />
-          <TouchableOpacity 
-            style={[styles.miniAddButton, { backgroundColor: colors.primary }]}
-            onPress={() => onPress(product)}
-          >
-            <Ionicons name="add" size={20} color="#fff" />
-          </TouchableOpacity>
+          
+          {/* Info extra (Simulada) */}
+          <View style={styles.timeInfo}>
+            <Ionicons name="time-outline" size={14} color="#8E8E93" />
+            <Text style={styles.timeText}>25-35 min</Text>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
   );
 };
 
-// 2. Función que genera los estilos usando los colores del tema
 const createStyles = (colors: any) => StyleSheet.create({
   card: {
     marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 24,
-    padding: 12,
-    backgroundColor: '#f4edd9', 
+    marginBottom: 24,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF', // Blanco puro para resaltar la comida
+    overflow: 'hidden', // Importante para que la imagen respete el radio superior
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  content: {
+  imageContainer: {
+    width: '100%',
+    height: 180, // Altura tipo Rappi
+    position: 'relative',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  promoBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: '#00BFA5', // Color turquesa tipo Rappi/Uber
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    gap: 4,
   },
-  textContainer: {
-    flex: 1,
-    paddingRight: 16,
-    paddingLeft: 4,
-    justifyContent: 'center'
+  promoText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  floatingAddButton: {
+    position: 'absolute',
+    bottom: -12,
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  footerContent: {
+    padding: 16,
+    paddingTop: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   name: {
-    fontWeight: "800",
-    lineHeight: 22,
-    marginBottom: 6,
-    color: '#1A1A1A', 
+    fontWeight: "900",
+    color: '#1A1A1A',
+    flex: 1,
+    marginRight: 8,
   },
-  description: {
-    fontSize: 13,
-    fontWeight: "500",
-    marginBottom: 10,
-    color: '#8E8E93', 
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9E5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
   },
-  priceContainer: {
+  ratingText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFB800',
+  },
+  restaurantName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: '#8E8E93',
+    marginBottom: 12,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  priceBox: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 6
+    gap: 6,
   },
   price: {
     fontWeight: "900",
   },
   variantsLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
-    color: '#C7C7CC'
+    color: '#C7C7CC',
   },
-  imageWrapper: {
-    position: 'relative',
-  },
-  image: {
-    width: 110,
-    height: 110,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
-  },
-  miniAddButton: {
-    position: 'absolute',
-    bottom: -6,
-    right: -6,
-    width: 36,
-    height: 36,
-    borderRadius: 14,
-    justifyContent: 'center',
+  timeInfo: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    elevation: 4,
-    // Ahora sí podemos usar colors.primary sin errores
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  }
+    gap: 4,
+  },
+  timeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#8E8E93',
+  },
 });
