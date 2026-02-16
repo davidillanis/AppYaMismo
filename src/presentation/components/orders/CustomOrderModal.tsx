@@ -6,6 +6,7 @@ import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -22,7 +23,8 @@ import { mappingError } from "@/src/infrastructure/configuration/security/Decode
 import { useAuth } from "@/src/presentation/context/AuthContext";
 import { useCreateOrder } from "@/src/presentation/hooks/useOrderMutation";
 
-// IDs REALES DE TU BBDD (Confirmados)
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 const GENERIC_PRODUCT_ID = 6;
 const GENERIC_VARIANT_ID = 12;
 
@@ -44,24 +46,23 @@ export const CustomOrderModal: React.FC<Props> = ({
   const [addressReference, setAddressReference] = useState("");
   const [isLocating, setIsLocating] = useState(false);
 
-  // Usamos el hook igual que en CartClient
   const mutation = useCreateOrder();
   const { user } = useAuth();
+  
+  // Optimizamos los estilos para que sean dinámicos y premium
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const SERVICE_FEE = 10.00;
 
+  // Lógica de envío (Sin modificaciones de datos)
   const handleSendOrder = async () => {
     if (!user) {
       Alert.alert(
         "Inicio de sesión requerido",
-        "Para realizar pedidos personalizados, necesitas una cuenta. ¿Deseas iniciar sesión ahora?",
+        "Para realizar pedidos personalizados, necesitas una cuenta.",
         [
           { text: "Más tarde", style: "cancel" },
-          {
-            text: "Iniciar Sesión",
-            onPress: () => router.push("/(auth)/login") // Redirigir al login
-          },
+          { text: "Iniciar Sesión", onPress: () => router.push("/(auth)/login") },
         ]
       );
       return;
@@ -74,9 +75,7 @@ export const CustomOrderModal: React.FC<Props> = ({
     setIsLocating(true);
 
     try {
-      // 1. Obtener Ubicación (Lógica idéntica a CartClient)
       let { status } = await Location.requestForegroundPermissionsAsync();
-
       if (status !== 'granted') {
         Alert.alert("Permiso denegado", "Necesitamos tu ubicación para el envío.");
         setIsLocating(false);
@@ -87,14 +86,10 @@ export const CustomOrderModal: React.FC<Props> = ({
         accuracy: Location.Accuracy.Balanced,
       });
 
-      // 2. Nota: Vamos a enviarla limpia y sin caracteres especiales 
-      // para asegurar que el backend no la rechace.
       const cleanDescription = description.replace(/\n/g, " ").trim();
       const cleanRef = addressReference.replace(/\n/g, " ").trim();
       const finalNote = `[${serviceType}] ${cleanDescription} | Ref: ${cleanRef || 'Sin referencia'}`;
 
-      // 3. CONSTRUCCIÓN DEL PAYLOAD (Copia exacta de CartClient)
-      // No añadimos 'total', 'address' ni nada que no esté en CartClient
       const payload = {
         paymentMethod: EPaymentMethod.EFECTIVO,
         latitude: location.coords.latitude,
@@ -111,14 +106,10 @@ export const CustomOrderModal: React.FC<Props> = ({
         ],
       };
 
-      console.log("Payload Estilo CartClient:", JSON.stringify(payload));
-
-      // 4. Enviar usando el mismo patrón que CartClient (.mutate)
       mutation.mutate(
         { payload },
         {
           onSuccess: (response) => {
-            // Validamos con isSuccess según tu ResponseStatusDTO
             if (response.isSuccess) {
               Toast.show({
                 type: "success",
@@ -134,19 +125,14 @@ export const CustomOrderModal: React.FC<Props> = ({
             }
           },
           onError: (error: any) => {
-            // Usamos tu función mappingError igual que en el carrito
             let message = mappingError(error);
-            console.error("Error API:", message);
             Alert.alert("Error", "Hubo un problema al enviar el pedido especial.");
           },
-          onSettled: () => {
-            setIsLocating(false);
-          }
+          onSettled: () => setIsLocating(false)
         }
       );
 
     } catch (error) {
-      console.error("Catch Error:", error);
       Alert.alert("Error", "No se pudo procesar el pedido.");
       setIsLocating(false);
     }
@@ -154,87 +140,229 @@ export const CustomOrderModal: React.FC<Props> = ({
 
   const isLoading = mutation.isPending || isLocating;
 
-  return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.overlay}
-      >
-        <TouchableOpacity style={styles.dismissArea} onPress={onClose} activeOpacity={1} />
+  // Definimos un color de acento basado en el tipo de servicio
+  const serviceColor = useMemo(() => {
+    if (serviceType.toLowerCase().includes('botica')) return '#EF4444';
+    if (serviceType.toLowerCase().includes('licor')) return '#8B5CF6';
+    if (serviceType.toLowerCase().includes('bodega')) return '#F59E0B';
+    return colors.primary;
+  }, [serviceType, colors]);
 
-        <View style={styles.container}>
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <TouchableOpacity style={styles.dismissArea} onPress={onClose} activeOpacity={1} />
+        
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.container}
+        >
+          {/* A. INDICADOR DE CIERRE */}
+          <View style={styles.dragHandle} />
+
+          {/* B. CABECERA CON ESTILO */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>Pedir {serviceType}</Text>
-              <Text style={styles.subtitle}>Lo que necesites hasta tu puerta</Text>
+            <View style={[styles.iconBox, { backgroundColor: `${serviceColor}15` }]}>
+              <Ionicons 
+                name={serviceType.toLowerCase().includes('botica') ? "medkit" : "bicycle"} 
+                size={24} 
+                color={serviceColor} 
+              />
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color={colors.error} />
+            <View style={styles.headerText}>
+              <Text style={styles.title}>Pedir {serviceType}</Text>
+              <Text style={styles.subtitle}>Lo que necesites, hasta tu puerta</Text>
+            </View>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.form}>
-            <Text style={styles.label}>¿Qué debemos comprar?</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Ej: Medicinas, víveres, herramientas..."
-              placeholderTextColor={colors.textTertiary}
-              multiline
-              numberOfLines={3}
-              value={description}
-              onChangeText={setDescription}
-              textAlignVertical="top"
-              editable={!isLoading}
-            />
+            {/* C. INPUT DE DESCRIPCIÓN */}
+            <Text style={styles.label}>¿Qué debemos comprar por ti?</Text>
+            <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Ej: 2 Panadol de 500mg, 1L de leche..."
+                placeholderTextColor={colors.textTertiary}
+                multiline
+                numberOfLines={4}
+                value={description}
+                onChangeText={setDescription}
+                textAlignVertical="top"
+                editable={!isLoading}
+              />
+            </View>
 
-            <Text style={styles.label}>¿Donde lo compramos? (Opcional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ej: En la botica de la esquina..."
-              placeholderTextColor={colors.textTertiary}
-              value={addressReference}
-              onChangeText={setAddressReference}
-              editable={!isLoading}
-            />
+            {/* D. INPUT DE REFERENCIA */}
+            <Text style={styles.label}>¿Dónde lo compramos? (Opcional)</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="location-outline" size={18} color={colors.textTertiary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Ej: En la tienda frente al parque..."
+                placeholderTextColor={colors.textTertiary}
+                value={addressReference}
+                onChangeText={setAddressReference}
+                editable={!isLoading}
+              />
+            </View>
 
-            <View style={styles.costRow}>
-              <Text style={styles.costLabel}>Tarifa de servicio:</Text>
-              <Text style={styles.costValue}>S/. {SERVICE_FEE.toFixed(2)}</Text>
+            {/* E. RESUMEN DE COSTO TIPO CARD */}
+            <View style={styles.costCard}>
+              <View style={styles.costInfo}>
+                <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.costLabel}>Tarifa por el servicio</Text>
+              </View>
+              <Text style={styles.costValue}>S/ {SERVICE_FEE.toFixed(2)}</Text>
             </View>
           </View>
 
+          {/* F. BOTÓN DE ACCIÓN TIPO "10/10" */}
           <TouchableOpacity
-            style={[styles.actionButton, isLoading && { opacity: 0.7 }]}
+            style={[
+              styles.actionButton, 
+              { backgroundColor: serviceColor },
+              isLoading && { opacity: 0.7 }
+            ]}
             onPress={handleSendOrder}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color={colors.textInverse} />
+              <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.actionButtonText}>Confirmar Mandadito</Text>
+              <>
+                <Text style={styles.actionButtonText}>Confirmar pedido</Text>
+                <Ionicons name="arrow-forward" size={18} color="#FFF" style={{ marginLeft: 8 }} />
+              </>
             )}
           </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
 
 const createStyles = (colors: MappedPalette) => StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
+  overlay: { 
+    flex: 1, 
+    backgroundColor: "rgba(0,0,0,0.6)", 
+    justifyContent: "flex-end" 
+  },
   dismissArea: { flex: 1 },
-  container: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, elevation: 10 },
-  header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  title: { fontSize: 20, fontWeight: "800", color: colors.text, fontFamily: colors.fontPrimary },
-  subtitle: { fontSize: 13, color: colors.textSecondary, marginTop: 2, fontFamily: colors.fontSecondary },
-  closeButton: { padding: 8, backgroundColor: colors.surfaceVariant, borderRadius: 20 },
-  form: { marginBottom: 24 },
-  label: { fontSize: 13, fontWeight: "700", color: colors.textSecondary, marginBottom: 8, marginTop: 12, fontFamily: colors.fontPrimary },
-  input: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, fontSize: 14, color: colors.text, fontFamily: colors.fontSecondary },
-  textArea: { height: 80 },
-  actionButton: { backgroundColor: colors.primary, borderRadius: 16, paddingVertical: 16, alignItems: "center", shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, elevation: 4 },
-  actionButtonText: { color: colors.textInverse, fontSize: 16, fontWeight: "800", fontFamily: colors.fontPrimary },
-  costRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15, paddingVertical: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.borderVariant },
-  costLabel: { fontSize: 14, color: colors.textSecondary, fontWeight: '600', fontFamily: colors.fontSecondary },
-  costValue: { fontSize: 16, color: colors.text, fontWeight: '800', fontFamily: colors.fontPrimary },
+  container: { 
+    backgroundColor: '#FFFFFF', 
+    borderTopLeftRadius: 32, 
+    borderTopRightRadius: 32, 
+    padding: 24, 
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 20 
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: '#E5E5EA',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 20
+  },
+  header: { 
+    flexDirection: "row", 
+    alignItems: "center",
+    marginBottom: 24 
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  headerText: { flex: 1 },
+  title: { 
+    fontSize: 20, 
+    fontWeight: "900", 
+    color: '#1A1A1A', 
+    letterSpacing: -0.5 
+  },
+  subtitle: { 
+    fontSize: 13, 
+    color: '#8E8E93', 
+    marginTop: 2,
+    fontWeight: '500'
+  },
+  closeBtn: {
+    padding: 8,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12
+  },
+  form: { marginBottom: 30 },
+  label: { 
+    fontSize: 14, 
+    fontWeight: "700", 
+    color: '#1A1A1A', 
+    marginBottom: 10, 
+    marginTop: 16 
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#F2F2F7',
+    paddingHorizontal: 16
+  },
+  textAreaWrapper: { alignItems: 'flex-start', paddingTop: 12 },
+  inputIcon: { marginRight: 10 },
+  input: { 
+    flex: 1, 
+    paddingVertical: 12, 
+    fontSize: 15, 
+    color: '#1A1A1A',
+    fontWeight: '500'
+  },
+  textArea: { height: 100 },
+  costCard: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginTop: 20, 
+    padding: 16, 
+    backgroundColor: '#F2F2F7',
+    borderRadius: 16
+  },
+  costInfo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  costLabel: { 
+    fontSize: 14, 
+    color: '#3A3A3C', 
+    fontWeight: '600' 
+  },
+  costValue: { 
+    fontSize: 18, 
+    color: '#1A1A1A', 
+    fontWeight: '900' 
+  },
+  actionButton: { 
+    height: 58,
+    borderRadius: 18, 
+    flexDirection: 'row',
+    justifyContent: "center", 
+    alignItems: "center", 
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.2, 
+    elevation: 4 
+  },
+  actionButtonText: { 
+    color: '#FFFFFF', 
+    fontSize: 17, 
+    fontWeight: "800" 
+  },
 });

@@ -3,12 +3,13 @@ import { useRouter } from "expo-router";
 import React, { memo, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity, // Importante para los botones
+  TouchableOpacity,
   View,
 } from "react-native";
 import { Drawer } from "react-native-drawer-layout";
@@ -35,9 +36,11 @@ import DrawerMenu from "../../components/widgets/DrawerMenu";
 import Header from "../../components/widgets/Header";
 
 // Modales
-import { ProductEntity, ProductVariantEntity } from "@/src/domain/entities/ProductEntity";
-import { CustomOrderModal } from "@/src/presentation/components/orders/CustomOrderModal"; // 🔥 1. IMPORTAR MODAL
+import { ProductEntity } from "@/src/domain/entities/ProductEntity";
+import { CustomOrderModal } from "@/src/presentation/components/orders/CustomOrderModal";
 import { ProductVariantModal } from "@/src/presentation/components/products/ProductVariantModal";
+
+const { width } = Dimensions.get('window');
 
 // --- INTERFAZ PROPS DEL HEADER ---
 interface HomeHeaderProps {
@@ -55,10 +58,10 @@ interface HomeHeaderProps {
   selectedProductCategory: string;
   onSelectProductCategory: (cat: string) => void;
   selectedRestaurantName: string;
-  onOpenCustomOrder: (type: string) => void; // 🔥 2. NUEVO PROP
+  onOpenCustomOrder: (type: string) => void;
 }
 
-// --- COMPONENTE HEADER ---
+// --- COMPONENTE HEADER (UI REDISEÑADA) ---
 const HomeHeaderComponent = ({
   searchText, setSearchText,
   restaurantCategories, selectedRestCategory, onSelectRestCategory,
@@ -66,24 +69,23 @@ const HomeHeaderComponent = ({
   loadingRest, colors,
   productCategories, selectedProductCategory, onSelectProductCategory,
   selectedRestaurantName,
-  onOpenCustomOrder // Recibimos la función
+  onOpenCustomOrder 
 }: HomeHeaderProps) => {
 
-  // 🔥 3. DEFINIR SERVICIOS RÁPIDOS
   const quickServices = [
-    { id: 'botica', name: 'Botica', icon: 'medkit', color: colors.error },
-    { id: 'licores', name: 'Licores', icon: 'wine', color: colors.secondary },
-    { id: 'bodega', name: 'Bodega', icon: 'basket', color: colors.warning },
-    { id: 'mandadito', name: 'Mandadito', icon: 'bicycle', color: colors.success },
+    { id: 'botica', name: 'Botica', icon: 'medkit', color: '#EF4444' },
+    { id: 'licores', name: 'Licores', icon: 'wine', color: '#8B5CF6' },
+    { id: 'bodega', name: 'Bodega', icon: 'basket', color: '#F59E0B' },
+    { id: 'mandadito', name: 'Mandadito', icon: 'bicycle', color: '#10B981' },
   ];
 
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.headerContent}>
-
-      {/* A. BUSCADOR */}
-      <View style={styles.searchContainer}>
+      
+      {/* 1. BUSCADOR ESTILO PREMIUM */}
+      <View style={styles.searchWrapper}>
         <Ionicons name="search-outline" size={20} color={colors.textSecondary} />
         <TextInput
           placeholder="¿Qué se te antoja hoy?"
@@ -92,21 +94,24 @@ const HomeHeaderComponent = ({
           value={searchText}
           onChangeText={setSearchText}
         />
+        <TouchableOpacity style={styles.filterIconButton}>
+          <Ionicons name="options-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
-      {/* 🔥 B. NUEVA SECCIÓN: BOTONES RÁPIDOS */}
-      <View style={{ marginTop: 24 }}>
-        <Text style={styles.sectionTitle}>¿Qué necesitas?</Text>
+      {/* 2. SERVICIOS RÁPIDOS */}
+      <View style={styles.sectionMargin}>
+        <Text style={styles.sectionTitle}>¿Cómo te ayudamos?</Text>
         <View style={styles.quickServicesGrid}>
           {quickServices.map((service) => (
             <TouchableOpacity
               key={service.id}
               style={styles.serviceCard}
               onPress={() => onOpenCustomOrder(service.name)}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <View style={[styles.serviceIconBox, { backgroundColor: service.color + '10' }]}>
-                <Ionicons name={service.icon as any} size={24} color={service.color} />
+              <View style={[styles.serviceIconBox, { backgroundColor: service.color }]}>
+                <Ionicons name={service.icon as any} size={26} color="#FFF" />
               </View>
               <Text style={styles.serviceText}>{service.name}</Text>
             </TouchableOpacity>
@@ -114,32 +119,31 @@ const HomeHeaderComponent = ({
         </View>
       </View>
 
-      {/* C. FILTRO MACRO (Categorías Restaurante) */}
-      <View style={{ marginTop: 24 }}>
+      {/* 3. CATEGORÍAS MACRO */}
+      <View style={styles.sectionMargin}>
         <Text style={styles.sectionTitle}>Categorías</Text>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
           data={restaurantCategories}
           keyExtractor={(item) => item}
-          contentContainerStyle={{ paddingVertical: 10, paddingRight: 20 }}
+          contentContainerStyle={styles.horizontalScrollPadding}
           renderItem={({ item }) => (
             <CategoryChip
               name={item}
               isSelected={selectedRestCategory === item}
               onSelect={() => onSelectRestCategory(item)}
+              colors={colors}
             />
           )}
         />
       </View>
 
-      {/* D. LISTA DE RESTAURANTES */}
-      <View style={{ marginTop: 10 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <Text style={styles.subSectionTitle}>
-            {selectedRestCategory === "Todos" ? "Restaurantes Destacados" : `Locales de ${selectedRestCategory}`}
-          </Text>
-        </View>
+      {/* 4. RESTAURANTES DESTACADOS */}
+      <View style={styles.sectionMargin}>
+        <Text style={styles.subSectionTitle}>
+          {selectedRestCategory === "Todos" ? "Restaurantes Destacados" : `Locales de ${selectedRestCategory}`}
+        </Text>
 
         {loadingRest ? (
           <ActivityIndicator color={colors.primary} style={{ height: 100 }} />
@@ -149,7 +153,7 @@ const HomeHeaderComponent = ({
             showsHorizontalScrollIndicator={false}
             data={filteredRestaurants}
             keyExtractor={(item) => String(item.id)}
-            contentContainerStyle={{ paddingRight: 20 }}
+            contentContainerStyle={styles.horizontalScrollPadding}
             renderItem={({ item }) => (
               <RestaurantCard
                 id={item.id}
@@ -162,31 +166,31 @@ const HomeHeaderComponent = ({
               />
             )}
             ListEmptyComponent={
-              <Text style={{ color: colors.textSecondary, fontStyle: 'italic', padding: 10 }}>
-                No hay locales disponibles.
-              </Text>
+              <Text style={styles.emptyTextSmall}>No hay locales disponibles.</Text>
             }
           />
         )}
       </View>
 
-      {/* E. FILTRO MICRO (Productos) */}
+      {/* 5. CARTA Y CATEGORÍAS MICRO */}
       {productCategories.length > 0 && (
-        <View style={{ marginTop: 20, marginBottom: 10 }}>
-          <Text style={styles.subSectionTitle}>
-            Carta: {selectedRestaurantName}
+        <View style={styles.productHeaderArea}>
+          <View style={styles.divider} />
+          <Text style={styles.menuHeadline}>
+            Carta: <Text style={{ color: colors.primary }}>{selectedRestaurantName}</Text>
           </Text>
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
             data={productCategories}
             keyExtractor={(item) => item}
-            contentContainerStyle={{ paddingRight: 20, paddingTop: 5, paddingBottom: 5 }}
+            contentContainerStyle={styles.horizontalScrollPadding}
             renderItem={({ item }) => (
               <CategoryChip
                 name={item}
                 isSelected={item === selectedProductCategory}
                 onSelect={() => onSelectProductCategory(item)}
+                colors={colors}
               />
             )}
           />
@@ -210,17 +214,11 @@ const ClienteIndex: React.FC = () => {
   // Estados
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
-
-  // Filtros
   const [selectedRestCategory, setSelectedRestCategory] = useState("Todos");
   const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
   const [selectedProductCategory, setSelectedProductCategory] = useState("Todo");
-
-  // Modales
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedProductForModal, setSelectedProductForModal] = useState<ProductEntity | null>(null);
-
-  // 🔥 4. ESTADOS PARA MODAL MANDADITOS
   const [isCustomOrderModalVisible, setIsCustomOrderModalVisible] = useState(false);
   const [customOrderType, setCustomOrderType] = useState("");
 
@@ -233,7 +231,6 @@ const ClienteIndex: React.FC = () => {
     enabled: true,
   });
 
-  // Lógica de Filtros (Igual que antes)
   const rawActiveRestaurants = useMemo(() => {
     return restData?.data?.content?.filter((r: any) => r.enabled === true) || [];
   }, [restData]);
@@ -274,26 +271,8 @@ const ClienteIndex: React.FC = () => {
     return products;
   }, [products, selectedRestCategory, selectedRestaurant]);
 
-  // Handlers
-  const handleSelectRestaurant = (restaurant: any) => {
-    setSelectedRestaurant(restaurant);
-    setSelectedProductCategory("Todo");
-  };
-
-  const handleProductPress = (product: ProductEntity) => {
-    setSelectedProductForModal(product);
-    setIsModalVisible(true);
-  };
-
-  const handleAddToCartFromModal = (product: ProductEntity, variant: ProductVariantEntity, quantity: number) => {
-    addToCart(product, variant, quantity);
-  };
-
-  // 🔥 5. HANDLER PARA ABRIR MODAL
-  const handleOpenCustomOrder = (type: string) => {
-    setCustomOrderType(type);
-    setIsCustomOrderModalVisible(true);
-  };
+  // FIX: El número de columnas debe estar atado a una Key única
+  const numColumns = 1;
 
   return (
     <>
@@ -324,6 +303,7 @@ const ClienteIndex: React.FC = () => {
           />
         )}
       >
+        {/*<SafeAreaView style={[styles.container, { backgroundColor: '#F8F9FA' }]}> */}
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
           <Header
             colors={colors}
@@ -333,6 +313,8 @@ const ClienteIndex: React.FC = () => {
           />
 
           <FlatList
+            key={`list-${numColumns}`} // 🔥 FIX: Evita el error Invariant Violation
+            numColumns={numColumns}
             data={visibleProducts}
             keyExtractor={(item) => String(item.id)}
             renderItem={({ item }) => (
@@ -341,7 +323,10 @@ const ClienteIndex: React.FC = () => {
                 colors={colors}
                 normalize={normalize}
                 restaurantName={selectedRestaurant?.id === 0 ? item.restaurant?.name : undefined}
-                onPress={handleProductPress}
+                onPress={(product) => {
+                  setSelectedProductForModal(product);
+                  setIsModalVisible(true);
+                }}
               />
             )}
             ListHeaderComponent={
@@ -353,14 +338,20 @@ const ClienteIndex: React.FC = () => {
                 onSelectRestCategory={setSelectedRestCategory}
                 filteredRestaurants={filteredRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id}
-                onSelectRestaurant={handleSelectRestaurant}
+                onSelectRestaurant={(r) => {
+                  setSelectedRestaurant(r);
+                  setSelectedProductCategory("Todo");
+                }}
                 loadingRest={loadingRest}
                 colors={colors}
                 productCategories={productCategories}
                 selectedProductCategory={selectedProductCategory}
                 onSelectProductCategory={setSelectedProductCategory}
                 selectedRestaurantName={selectedRestaurant?.name === "Todos" ? "Mix Variado" : selectedRestaurant?.name}
-                onOpenCustomOrder={handleOpenCustomOrder} // 🔥 PASAMOS LA FUNCIÓN
+                onOpenCustomOrder={(type) => {
+                  setCustomOrderType(type);
+                  setIsCustomOrderModalVisible(true);
+                }}
               />
             }
             onEndReached={loadMore}
@@ -368,8 +359,8 @@ const ClienteIndex: React.FC = () => {
             ListFooterComponent={isLoadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 20 }} /> : <View style={{ height: 100 }} />}
             ListEmptyComponent={!isLoadingInitial ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="fast-food-outline" size={48} color={colors.textTertiary} />
-                <Text style={styles.emptyText}>No hay productos disponibles.</Text>
+                <Ionicons name="fast-food-outline" size={60} color={colors.textTertiary} />
+                <Text style={styles.emptyText}>No hay productos disponibles por ahora.</Text>
               </View>
             ) : null}
             showsVerticalScrollIndicator={false}
@@ -384,53 +375,105 @@ const ClienteIndex: React.FC = () => {
             product={selectedProductForModal}
             colors={colors}
             onClose={() => setIsModalVisible(false)}
-            onAddToCart={handleAddToCartFromModal}
+            onAddToCart={(p, v, q) => addToCart(p, v, q)}
           />
 
-          {/* 🔥 6. RENDERIZAR MODAL MANDADITOS */}
           <CustomOrderModal
             visible={isCustomOrderModalVisible}
             onClose={() => setIsCustomOrderModalVisible(false)}
             serviceType={customOrderType}
             colors={colors}
           />
-
         </SafeAreaView>
       </Drawer>
     </>
   );
 };
 
+// --- STYLES PROFESIONALES ---
 const createStyles = (colors: MappedPalette) => StyleSheet.create({
   container: { flex: 1 },
   listContent: { paddingBottom: 20 },
-  headerContent: { paddingHorizontal: 16, paddingTop: 10 },
+  headerContent: { paddingTop: 10 },
 
-  // Buscador
-  searchContainer: {
-    flexDirection: "row", alignItems: "center", backgroundColor: colors.surface,
-    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
-    borderWidth: 1, borderColor: colors.border,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5, elevation: 2,
+  // Buscador Moderno
+  searchWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  searchInput: { flex: 1, marginLeft: 10, color: colors.text, fontSize: 14, fontWeight: "500" },
+  searchInput: { flex: 1, marginLeft: 10, color: colors.text, fontSize: 15, fontWeight: "500" },
+  filterIconButton: { padding: 4 },
 
-  // Títulos
-  sectionTitle: { fontSize: 18, fontWeight: "800", color: colors.text, letterSpacing: -0.5 },
-  subSectionTitle: { fontSize: 13, fontWeight: "700", color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  // Tipografía y Secciones
+  sectionMargin: { marginTop: 24 },
+  sectionTitle: { 
+    fontSize: 20, 
+    fontWeight: "800", 
+    color: colors.text, 
+    letterSpacing: -0.5, 
+    marginLeft: 20, 
+    marginBottom: 12 
+  },
+  subSectionTitle: { 
+    fontSize: 16, 
+    fontWeight: "700", 
+    color: colors.text, 
+    marginLeft: 20, 
+    marginBottom: 12 
+  },
+  horizontalScrollPadding: { paddingLeft: 20, paddingRight: 10 },
 
-  // 🔥 Estilos Grid Servicios
-  quickServicesGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
-  serviceCard: { alignItems: 'center', width: '23%' },
+  // Servicios Rápidos (Grid)
+  quickServicesGrid: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20 
+  },
+  serviceCard: { alignItems: 'center', width: (width - 60) / 4 },
   serviceIconBox: {
-    width: 58, height: 58, borderRadius: 18,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 6
+    width: 62,
+    height: 62,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
   },
-  serviceText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary, textAlign: 'center' },
+  serviceText: { fontSize: 11, fontWeight: '700', color: colors.textSecondary, textAlign: 'center' },
+
+  // Carta de Productos
+  productHeaderArea: { marginTop: 15, paddingBottom: 10 },
+  divider: { height: 1, backgroundColor: colors.border, marginHorizontal: 20, marginBottom: 20 },
+  menuHeadline: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginLeft: 20,
+    marginBottom: 10
+  },
 
   // Empty State
-  emptyContainer: { alignItems: 'center', marginTop: 40 },
-  emptyText: { textAlign: "center", marginTop: 10, color: colors.textTertiary, fontSize: 14, fontWeight: "500" },
+  emptyContainer: { alignItems: 'center', marginTop: 50, opacity: 0.6 },
+  emptyText: { textAlign: "center", marginTop: 15, color: colors.textSecondary, fontSize: 15, fontWeight: "600" },
+  emptyTextSmall: { color: colors.textSecondary, fontStyle: 'italic', marginLeft: 20 }
 });
 
 export default ClienteIndex;

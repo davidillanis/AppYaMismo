@@ -1,4 +1,3 @@
-import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -10,7 +9,7 @@ interface Props {
   urlImagen?: string;
   isSelected: boolean;
   onSelect: () => void;
-  colors: typeof Colors.light; // Pasamos los colores para mantener consistencia
+  colors: any;
 }
 
 export const RestaurantCard: React.FC<Props> = ({
@@ -23,61 +22,96 @@ export const RestaurantCard: React.FC<Props> = ({
 }) => {
   return (
     <TouchableOpacity
-      style={[
-        styles.card,
-        { backgroundColor: colors.surface || "#fff" }, // Fallback si no hay color definido
-        isSelected && { backgroundColor: colors.tabIconSelected }, // Tu color de selección
-      ]}
+      style={styles.container}
       onPress={onSelect}
-      activeOpacity={0.85}
+      activeOpacity={0.8}
     >
-      {urlImagen ? (
-        <Image source={{ uri: urlImagen }} style={styles.image} />
-      ) : (
-        <View style={[styles.image, styles.placeholder]}>
-          <Ionicons name="restaurant" size={30} color="#fff" />
-        </View>
-      )}
+      <View style={[
+        styles.ring, 
+        { borderColor: isSelected ? colors.primary : 'transparent' }
+      ]}>
+        {urlImagen ? (
+          <Image source={{ uri: urlImagen }} style={styles.image} />
+        ) : (
+          <View style={[styles.image, { backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' }]}>
+            <Ionicons name="restaurant-outline" size={24} color={colors.textTertiary} />
+          </View>
+        )}
+        
+        {isSelected && (
+          <View style={[styles.checkBadge, { backgroundColor: colors.primary }]}>
+            <Ionicons name="checkmark" size={10} color="#fff" />
+          </View>
+        )}
+      </View>
 
       <Text
         style={[
           styles.name,
-          { color: colors.text },
-          isSelected && { fontWeight: "700", color: colors.textInverse },
+          { color: isSelected ? colors.text : colors.textSecondary },
+          isSelected && { fontWeight: "800" },
         ]}
         numberOfLines={1}
       >
         {name}
       </Text>
-      <Text>{categoria}</Text>
+      
+      <Text style={[styles.category, { color: colors.textTertiary }]} numberOfLines={1}>
+        {categoria}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
+  container: {
     alignItems: "center",
-    marginRight: 15,
-    padding: 8,
-    borderRadius: 16,
-    width: 90,
+    marginRight: 18,
+    width: 80, // Un poco más ancho para legibilidad
+  },
+  ring: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    borderWidth: 2.5,
+    padding: 3, // Espacio entre el anillo y la imagen
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    position: 'relative'
   },
   image: {
-    width: 70,
-    height: 70,
-    borderRadius: 15,
-    marginBottom: 5,
-    backgroundColor: "#eee",
+    width: '100%',
+    height: '100%',
+    borderRadius: 30, // Imagen casi circular
+    backgroundColor: "#F3F4F6",
   },
-  placeholder: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#ccc",
+  checkBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff'
   },
   name: {
-    fontSize: 11,
+    fontSize: 12,
     textAlign: "center",
-    fontWeight: "500",
+    fontWeight: "600",
     width: "100%",
+    marginBottom: 2,
+    color: '#1A1A1A', // Aseguramos un negro nítido
   },
+  category: {
+    fontSize: 11, // Un pelín más grande para legibilidad
+    fontWeight: "500",
+    textAlign: "center",
+    width: "100%",
+    color: '#8E8E93', // Gris elegante
+  }
+  
 });
