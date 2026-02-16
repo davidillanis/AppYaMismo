@@ -114,7 +114,7 @@ const HomeHeaderComponent = ({
         <FlatList
           horizontal showsHorizontalScrollIndicator={false}
           data={restaurantCategories}
-          keyExtractor={(item) => item}
+          keyExtractor={(item, index) => `cat-rest-${item}-${index}`}
           style={styles.horizontalListBoundary}
           renderItem={({ item }) => (
             <CategoryChip name={item} isSelected={selectedRestCategory === item} onSelect={() => onSelectRestCategory(item)} colors={colors} />
@@ -131,7 +131,7 @@ const HomeHeaderComponent = ({
           <FlatList
             horizontal showsHorizontalScrollIndicator={false}
             data={filteredRestaurants}
-            keyExtractor={(item) => String(item.id)}
+            keyExtractor={(item, index) => `rest-${item.id}-${index}`}
             style={styles.horizontalListBoundary}
             renderItem={({ item }) => (
               <RestaurantCard
@@ -154,7 +154,7 @@ const HomeHeaderComponent = ({
           <FlatList
             horizontal showsHorizontalScrollIndicator={false}
             data={productCategories}
-            keyExtractor={(item) => item}
+            keyExtractor={(item, index) => `cat-prod-${item}-${index}`}
             style={styles.horizontalListBoundary}
             renderItem={({ item }) => (
               <CategoryChip name={item} isSelected={item === selectedProductCategory} onSelect={() => onSelectProductCategory(item)} colors={colors} />
@@ -205,17 +205,18 @@ const ClienteIndex: React.FC = () => {
 
   // 🔥 CORRECCIÓN: Restringimos la aparición de "Todos" en la sub-lista
   const filteredRestaurants = useMemo(() => {
-    const list = rawActiveRestaurants.filter((r: any) =>
-      selectedRestCategory === "Todos" || r.restaurantTypes?.[0]?.name === selectedRestCategory
-    );
-    
-    // Solo agregamos el chip "Todos" si NO hemos escogido una categoría específica
-    if (selectedRestCategory === "Todos") {
-      return [{ id: 0, name: "Todos", urlImagen: "" }, ...list];
-    }
-    
-    return list; // Si eligió "Café", solo mostramos las cafeterías reales
-  }, [selectedRestCategory, rawActiveRestaurants]);
+  const list = rawActiveRestaurants.filter((r: any) =>
+    selectedRestCategory === "Todos" || r.restaurantTypes?.[0]?.name === selectedRestCategory
+  );
+  
+  if (selectedRestCategory === "Todos") {
+    // Filtramos cualquier ID 0 que pueda venir del backend para evitar colisiones
+    const cleanList = list.filter(r => r.id !== 0);
+    return [{ id: 0, name: "Todos", urlImagen: "", restaurantTypes: [] }, ...cleanList];
+  }
+  
+  return list;
+}, [selectedRestCategory, rawActiveRestaurants]);
 
   useEffect(() => {
     if (filteredRestaurants.length > 0) {
@@ -253,7 +254,7 @@ const ClienteIndex: React.FC = () => {
 
           <FlatList
             data={visibleProducts}
-            keyExtractor={(item) => String(item.id)}
+            keyExtractor={(item, index) => `prod-${item.id}-${index}`}
             renderItem={({ item }) => (
               <ProductCard
                 product={item} colors={colors} normalize={normalize}
