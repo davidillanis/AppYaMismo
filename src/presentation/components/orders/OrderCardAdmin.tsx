@@ -81,12 +81,12 @@ export const OrderCardAdmin: React.FC<Props> = ({
                     <Text style={{ color: '#fff', fontWeight: 'bold' }}>Rechazar</Text>
                 </TouchableOpacity>
                 
-                <TouchableOpacity 
+                {/*<TouchableOpacity 
                     style={[styles.actionButton, { backgroundColor: colors.success, marginLeft: 8 }]}
                     onPress={() => onUpdateStatus(order.id, EOrderStatus.EN_CAMINO)}
                 >
                     <Text style={{ color: colors.textInverse, fontWeight: 'bold' }}>Aceptar</Text>
-                </TouchableOpacity>
+                </TouchableOpacity>*/}
             </>
         )}
 
