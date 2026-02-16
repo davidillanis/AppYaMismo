@@ -1,8 +1,8 @@
-import { Colors } from "@/constants/Colors";
+import { MappedPalette } from "@/src/domain/types/MappedPalette";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -30,7 +30,7 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   serviceType: string;
-  colors: typeof Colors.light;
+  colors: MappedPalette;
 }
 
 export const CustomOrderModal: React.FC<Props> = ({
@@ -47,6 +47,7 @@ export const CustomOrderModal: React.FC<Props> = ({
   // Usamos el hook igual que en CartClient
   const mutation = useCreateOrder();
   const { user } = useAuth();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const SERVICE_FEE = 10.00;
 
@@ -168,7 +169,7 @@ export const CustomOrderModal: React.FC<Props> = ({
               <Text style={styles.subtitle}>Lo que necesites hasta tu puerta</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#1F2937" />
+              <Ionicons name="close" size={24} color={colors.error} />
             </TouchableOpacity>
           </View>
 
@@ -177,6 +178,7 @@ export const CustomOrderModal: React.FC<Props> = ({
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Ej: Medicinas, víveres, herramientas..."
+              placeholderTextColor={colors.textTertiary}
               multiline
               numberOfLines={3}
               value={description}
@@ -189,6 +191,7 @@ export const CustomOrderModal: React.FC<Props> = ({
             <TextInput
               style={styles.input}
               placeholder="Ej: En la botica de la esquina..."
+              placeholderTextColor={colors.textTertiary}
               value={addressReference}
               onChangeText={setAddressReference}
               editable={!isLoading}
@@ -206,7 +209,7 @@ export const CustomOrderModal: React.FC<Props> = ({
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.textInverse} />
             ) : (
               <Text style={styles.actionButtonText}>Confirmar Mandadito</Text>
             )}
@@ -217,21 +220,21 @@ export const CustomOrderModal: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: MappedPalette) => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
   dismissArea: { flex: 1 },
-  container: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, elevation: 10 },
+  container: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, elevation: 10 },
   header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  title: { fontSize: 20, fontWeight: "800", color: "#111827" },
-  subtitle: { fontSize: 13, color: "#6B7280", marginTop: 2 },
-  closeButton: { padding: 8, backgroundColor: "#F3F4F6", borderRadius: 20 },
+  title: { fontSize: 20, fontWeight: "800", color: colors.text, fontFamily: colors.fontPrimary },
+  subtitle: { fontSize: 13, color: colors.textSecondary, marginTop: 2, fontFamily: colors.fontSecondary },
+  closeButton: { padding: 8, backgroundColor: colors.surfaceVariant, borderRadius: 20 },
   form: { marginBottom: 24 },
-  label: { fontSize: 13, fontWeight: "700", color: "#374151", marginBottom: 8, marginTop: 12 },
-  input: { backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, padding: 12, fontSize: 14, color: "#1F2937" },
+  label: { fontSize: 13, fontWeight: "700", color: colors.textSecondary, marginBottom: 8, marginTop: 12, fontFamily: colors.fontPrimary },
+  input: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, fontSize: 14, color: colors.text, fontFamily: colors.fontSecondary },
   textArea: { height: 80 },
-  actionButton: { backgroundColor: "#E63946", borderRadius: 16, paddingVertical: 16, alignItems: "center", shadowColor: "#E63946", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, elevation: 4 },
-  actionButtonText: { color: "#fff", fontSize: 16, fontWeight: "800" },
-  costRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15, paddingVertical: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F3F4F6' },
-  costLabel: { fontSize: 14, color: '#374151', fontWeight: '600' },
-  costValue: { fontSize: 16, color: '#111827', fontWeight: '800' },
+  actionButton: { backgroundColor: colors.primary, borderRadius: 16, paddingVertical: 16, alignItems: "center", shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, elevation: 4 },
+  actionButtonText: { color: colors.textInverse, fontSize: 16, fontWeight: "800", fontFamily: colors.fontPrimary },
+  costRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15, paddingVertical: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.borderVariant },
+  costLabel: { fontSize: 14, color: colors.textSecondary, fontWeight: '600', fontFamily: colors.fontSecondary },
+  costValue: { fontSize: 16, color: colors.text, fontWeight: '800', fontFamily: colors.fontPrimary },
 });

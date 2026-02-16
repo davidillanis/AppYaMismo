@@ -44,7 +44,7 @@ const FuncionarioIndex: React.FC = () => {
     { icon: 'home-outline', title: 'BasePage', description: 'Un ejemplo de Pagina base', route: '/base/BasePage', color: colors.primary },
     { icon: 'map-outline', title: 'Monitoreo', description: 'Monitoreo MI UBICACIÓN', route: '/maps/RestaurantMap', color: colors.primary },
     { icon: 'pulse-outline', title: 'Socket', description: 'Test de socket', route: '/socket/SocketIndex', color: colors.primary },
-    { icon: 'camera-outline', title: 'Cámara', description: 'Funcionalidad De cámara', route: '/CameraPage', color: colors.primary },
+    { icon: 'chatbubble-ellipses-outline', title: 'ChatBot', description: 'Funcionalidad De cámara', route: '/ai-chat', color: colors.primary },
     { icon: 'receipt-outline', title: 'DealerPage', description: 'Gestionar pedidos', route: '/dealer/DealerPage', color: colors.secondary },
     { icon: 'map-outline', title: 'Monitoreo', description: 'Monitoreo MI UBICACIÓN', route: '/maps/MapScreen', color: colors.primary },
   ];

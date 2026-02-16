@@ -23,13 +23,11 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
   onNavigate,
   onLogout,
 }) => {
+  //const normalize = (size: number) =>Math.round(PixelRatio.roundToNearestPixel(size * (screenWidth / 375)));
   const normalize = (size: number) => normalizeScreen(size, screenWidth);
   const styles = createStyles(colors, normalize);
   const rolesRoute = getRoleRoutes(user?.accessToken);
   const router = useRouter();
-
-  // 🟢 Determinamos si el usuario es un invitado
-  const isGuest = !user;
 
   return (
     <View style={styles.drawerContainer}>
@@ -44,19 +42,15 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
             color={colors.textInverse}
           />
         </View>
-        {/* 🟢 Si es invitado, mostramos textos genéricos */}
-        <Text style={styles.profileName}>{user?.name || "Invitado"}</Text>
-        <Text style={styles.profileEmail}>{user?.email || "Explora nuestra app"}</Text>
-        
-        {!isGuest && (
-          <View style={styles.profileBadge}>
-            <Text style={styles.profileBadgeText}>{authority}</Text>
-          </View>
-        )}
+        <Text style={styles.profileName}>{user?.name}</Text>
+        <Text style={styles.profileEmail}>{user?.email}</Text>
+        <View style={styles.profileBadge}>
+          <Text style={styles.profileBadgeText}>{authority}</Text>
+        </View>
       </LinearGradient>
 
       <ScrollView
-        style={[styles.menuContainer, { backgroundColor: colors.background}]}
+        style={[styles.menuContainer, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
       >
         {menuItems.map((item, index) => (
@@ -81,8 +75,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
           </TouchableOpacity>
         ))}
 
-        {/* 🟢 Solo mostramos permisos si el usuario está logueado y tiene más de un rol */}
-        {!isGuest && rolesRoute.length > 1 && (
+        {rolesRoute.length > 1 && (
           <>
             <Text style={[styles.permissionsText, { backgroundColor: colors.surface }, { color: colors.text }]}> Permisos </Text>
             {rolesRoute.map((item, index) => (
@@ -93,7 +86,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
               >
                 <View style={styles.menuIconContainer}>
                   <Ionicons
-                    name="shield-checkmark"
+                    name="shield-checkmark" // icono único para todos los roles
                     size={normalize(20)}
                     color={colors.primary}
                   />
@@ -115,41 +108,22 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
         )}
       </ScrollView>
 
-      {/* 🟢 FOOTER DINÁMICO: Solo muestra "Cerrar sesión" si hay un usuario logueado */}
-      {!isGuest ? (
-        <View style={[styles.drawerFooter, { backgroundColor: colors.background}]}>
-          <TouchableOpacity 
-            style={[styles.logoutButton, { backgroundColor: colors.warning }]} 
-            onPress={async () => {
-              await onLogout();
-              router.replace("/(auth)/login");
-            }}
-          >
-            <Ionicons
-              name="log-out-outline"
-              size={normalize(18)}
-              color={colors.textInverse}
-            />
-            <Text style={styles.logoutText}>Cerrar sesión</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        /* 🟢 Si es invitado, mostramos un botón para Iniciar Sesión */
-        <View style={[styles.drawerFooter, { backgroundColor: colors.background}]}>
-          <TouchableOpacity 
-            style={[styles.loginButton, { backgroundColor: colors.primary }]} 
-            onPress={() => router.replace("/(auth)/login")}
-          >
-            <Ionicons
-              name="log-in-outline"
-              size={normalize(18)}
-              color={colors.textInverse}
-            />
-            <Text style={styles.logoutText}>Iniciar Sesión</Text>
-          </TouchableOpacity>
-          <Text style={styles.paddingText}></Text>
-        </View>
-      )}
+      <View style={[styles.drawerFooter, { backgroundColor: colors.background }]}>
+        <TouchableOpacity
+          style={[styles.logoutButton, { backgroundColor: colors.warning }]}
+          onPress={async () => {
+            await onLogout();
+            router.replace("/(auth)/login");
+          }}
+        >
+          <Ionicons
+            name="log-out-outline"
+            size={normalize(18)}
+            color={colors.textInverse}
+          />
+          <Text style={styles.logoutText}>Cerrar sesión</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -159,9 +133,15 @@ const createStyles = (
   normalize: (n: number) => number
 ) =>
   StyleSheet.create({
-    // ... Tus estilos existentes ...
-    drawerContainer: { flex: 1, backgroundColor: colors.surface },
-    drawerHeader: { padding: 24, paddingTop: 50, alignItems: "center" },
+    drawerContainer: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    drawerHeader: {
+      padding: 24,
+      paddingTop: 50,
+      alignItems: "center",
+    },
     profileImageContainer: {
       width: normalize(64),
       height: normalize(64),
@@ -171,24 +151,118 @@ const createStyles = (
       alignItems: "center",
       marginBottom: 12,
     },
-    profileName: { fontSize: normalize(20), fontWeight: "bold", color: colors.textInverse },
-    profileEmail: { fontSize: normalize(14), color: "rgba(255,255,255,0.9)" },
-    profileBadge: { backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: 8 },
-    profileBadgeText: { fontSize: normalize(12), color: colors.textInverse, fontWeight: "600" },
-    menuContainer: { flex: 1, paddingTop: 8 },
-    menuItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
-    menuIconContainer: { width: normalize(32), height: normalize(32), borderRadius: normalize(16), backgroundColor: colors.surfaceVariant, justifyContent: "center", alignItems: "center", marginRight: 16 },
-    menuText: { fontSize: normalize(16), color: colors.text, flex: 1 },
-    drawerFooter: { padding: 20, borderTopWidth: 1, borderTopColor: colors.border },
-    logoutButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 12 },
-    // 🟢 Estilo para el botón de login en el footer
-    loginButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 12 },
-    logoutText: { fontSize: normalize(16), color: colors.textInverse, fontWeight: "600", marginLeft: 8 },
-    roleMenuItem: { backgroundColor: colors.successLight, borderLeftWidth: 4, borderLeftColor: colors.secondary },
-    permissionsText: { fontSize: normalize(16), fontWeight: "700", color: colors.text, paddingHorizontal: 20, paddingVertical: 12, marginTop: 12, marginBottom: 8, backgroundColor: colors.surfaceVariant, borderRadius: 8, borderLeftWidth: 4, borderLeftColor: colors.primary },
-    paddingText: {
-    padding: 8,
-  },
+    profileName: {
+      fontSize: normalize(20),
+      fontWeight: "bold",
+      color: colors.textInverse,
+      fontFamily: colors.fontPrimary,
+    },
+    profileEmail: {
+      fontSize: normalize(14),
+      color: "rgba(255,255,255,0.9)",
+      fontFamily: colors.fontSecondary,
+    },
+    profileBadge: {
+      backgroundColor: "rgba(255,255,255,0.2)",
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    profileBadgeText: {
+      fontSize: normalize(12),
+      color: colors.textInverse,
+      fontWeight: "600",
+      fontFamily: colors.fontTertiary,
+    },
+    menuContainer: {
+      flex: 1,
+      paddingTop: 8,
+      maxHeight: "55%",
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    menuIconContainer: {
+      width: normalize(32),
+      height: normalize(32),
+      borderRadius: normalize(16),
+      backgroundColor: colors.surfaceVariant,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 16,
+    },
+    menuText: {
+      fontSize: normalize(16),
+      color: colors.text,
+      flex: 1,
+      fontFamily: colors.fontPrimary,
+    },
+    drawerFooter: {
+      padding: 20,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    logoutButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.error,
+      paddingVertical: 14,
+      borderRadius: 12,
+    },
+
+    logoutText: {
+      fontSize: normalize(16),
+      color: colors.textInverse,
+      fontWeight: "600",
+      marginLeft: 8,
+      fontFamily: colors.fontPrimary,
+    },
+
+    roleMenuItem: {
+      backgroundColor: colors.successLight,
+      borderLeftWidth: 4,
+      borderLeftColor: colors.secondary,
+    },
+
+    roleBadge: {
+      backgroundColor: "rgba(71, 16, 16, 0.1)",
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
+      marginRight: 8,
+    },
+
+    roleBadgeContainer: {
+      backgroundColor: colors.primary,
+    },
+
+    roleBadgeText: {
+      fontSize: normalize(10),
+      color: colors.textInverse,
+      fontWeight: "600",
+      fontFamily: colors.fontTertiary,
+    },
+
+    permissionsText: {
+      fontSize: normalize(16),
+      fontWeight: "700",
+      color: colors.text,
+      fontFamily: colors.fontPrimary,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      marginTop: 12,
+      marginBottom: 8,
+      backgroundColor: colors.surfaceVariant,
+      borderRadius: 8,
+      borderLeftWidth: 4,
+      borderLeftColor: colors.primary,
+    },
   });
 
 export default DrawerMenu;

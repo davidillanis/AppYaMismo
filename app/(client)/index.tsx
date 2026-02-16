@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // Config y Contextos
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { MappedPalette } from "@/src/domain/types/MappedPalette";
 import { normalizeScreen } from "@/src/infrastructure/configuration/utils/GlobalConfig";
 import { useAuth } from "@/src/presentation/context/AuthContext";
 import { useCart } from "@/src/presentation/context/CartContext";
@@ -49,7 +50,7 @@ interface HomeHeaderProps {
   selectedRestaurantId: number | undefined;
   onSelectRestaurant: (item: any) => void;
   loadingRest: boolean;
-  colors: any;
+  colors: MappedPalette;
   productCategories: string[];
   selectedProductCategory: string;
   onSelectProductCategory: (cat: string) => void;
@@ -70,22 +71,24 @@ const HomeHeaderComponent = ({
 
   // 🔥 3. DEFINIR SERVICIOS RÁPIDOS
   const quickServices = [
-    { id: 'botica', name: 'Botica', icon: 'medkit', color: '#EF4444' },
-    { id: 'licores', name: 'Licores', icon: 'wine', color: '#8B5CF6' },
-    { id: 'bodega', name: 'Bodega', icon: 'basket', color: '#F59E0B' },
-    { id: 'mandadito', name: 'Mandadito', icon: 'bicycle', color: '#10B981' },
+    { id: 'botica', name: 'Botica', icon: 'medkit', color: colors.error },
+    { id: 'licores', name: 'Licores', icon: 'wine', color: colors.secondary },
+    { id: 'bodega', name: 'Bodega', icon: 'basket', color: colors.warning },
+    { id: 'mandadito', name: 'Mandadito', icon: 'bicycle', color: colors.success },
   ];
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.headerContent}>
 
       {/* A. BUSCADOR */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#6B7280" />
+        <Ionicons name="search-outline" size={20} color={colors.textSecondary} />
         <TextInput
           placeholder="¿Qué se te antoja hoy?"
           style={styles.searchInput}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={searchText}
           onChangeText={setSearchText}
         />
@@ -159,7 +162,7 @@ const HomeHeaderComponent = ({
               />
             )}
             ListEmptyComponent={
-              <Text style={{ color: '#999', fontStyle: 'italic', padding: 10 }}>
+              <Text style={{ color: colors.textSecondary, fontStyle: 'italic', padding: 10 }}>
                 No hay locales disponibles.
               </Text>
             }
@@ -199,6 +202,7 @@ const HomeHeader = memo(HomeHeaderComponent);
 const ClienteIndex: React.FC = () => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "dark"];
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { user, logout } = useAuth();
   const normalize = (size: number) => normalizeScreen(size, 390);
@@ -293,7 +297,7 @@ const ClienteIndex: React.FC = () => {
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle={colorScheme === 'dark' ? "light-content" : "dark-content"} backgroundColor={colors.background} />
       <Drawer
         open={isDrawerOpen}
         onOpen={() => setIsDrawerOpen(true)}
@@ -308,7 +312,7 @@ const ClienteIndex: React.FC = () => {
             menuItems={
               user
                 ? [
-                  { icon: "person-outline", title: "Mi perfil", route: "/PerfilAdmi" },
+                  { icon: "person-outline", title: "Mi perfil", route: "/ProfileUser" },
                   { icon: "receipt-outline", title: "Mis Pedidos", route: "/OrderHistoryClient" },
                 ]
                 : [
@@ -320,7 +324,7 @@ const ClienteIndex: React.FC = () => {
           />
         )}
       >
-        <SafeAreaView style={[styles.container, { backgroundColor: "#F9FAFB" }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
           <Header
             colors={colors}
             screenWidth={390}
@@ -364,7 +368,7 @@ const ClienteIndex: React.FC = () => {
             ListFooterComponent={isLoadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 20 }} /> : <View style={{ height: 100 }} />}
             ListEmptyComponent={!isLoadingInitial ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="fast-food-outline" size={48} color="#D1D5DB" />
+                <Ionicons name="fast-food-outline" size={48} color={colors.textTertiary} />
                 <Text style={styles.emptyText}>No hay productos disponibles.</Text>
               </View>
             ) : null}
@@ -397,23 +401,23 @@ const ClienteIndex: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: MappedPalette) => StyleSheet.create({
   container: { flex: 1 },
   listContent: { paddingBottom: 20 },
   headerContent: { paddingHorizontal: 16, paddingTop: 10 },
 
   // Buscador
   searchContainer: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF",
+    flexDirection: "row", alignItems: "center", backgroundColor: colors.surface,
     borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: colors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5, elevation: 2,
   },
-  searchInput: { flex: 1, marginLeft: 10, color: "#111827", fontSize: 14, fontWeight: "500" },
+  searchInput: { flex: 1, marginLeft: 10, color: colors.text, fontSize: 14, fontWeight: "500" },
 
   // Títulos
-  sectionTitle: { fontSize: 18, fontWeight: "800", color: "#111827", letterSpacing: -0.5 },
-  subSectionTitle: { fontSize: 13, fontWeight: "700", color: "#6B7280", textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionTitle: { fontSize: 18, fontWeight: "800", color: colors.text, letterSpacing: -0.5 },
+  subSectionTitle: { fontSize: 13, fontWeight: "700", color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   // 🔥 Estilos Grid Servicios
   quickServicesGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
@@ -422,11 +426,11 @@ const styles = StyleSheet.create({
     width: 58, height: 58, borderRadius: 18,
     justifyContent: 'center', alignItems: 'center', marginBottom: 6
   },
-  serviceText: { fontSize: 11, fontWeight: '600', color: '#4B5563', textAlign: 'center' },
+  serviceText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary, textAlign: 'center' },
 
   // Empty State
   emptyContainer: { alignItems: 'center', marginTop: 40 },
-  emptyText: { textAlign: "center", marginTop: 10, color: "#9CA3AF", fontSize: 14, fontWeight: "500" },
+  emptyText: { textAlign: "center", marginTop: 10, color: colors.textTertiary, fontSize: 14, fontWeight: "500" },
 });
 
 export default ClienteIndex;
