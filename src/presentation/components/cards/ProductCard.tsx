@@ -25,7 +25,7 @@ export const ProductCard: React.FC<Props> = ({
 
   return (
     <TouchableOpacity 
-      style={styles.card}
+      style={[styles.card, { backgroundColor: colors.surface }]}
       onPress={() => onPress(product)}
       activeOpacity={0.95}
     >
@@ -54,7 +54,7 @@ export const ProductCard: React.FC<Props> = ({
       {/* 2. SECCIÓN DE INFORMACIÓN (Debajo de la imagen) */}
       <View style={styles.footerContent}>
         <View style={styles.headerRow}>
-          <Text style={[styles.name, { fontSize: normalize(17) }]} numberOfLines={1}>
+          <Text style={[styles.name, { fontSize: normalize(17), color: colors.text }]} numberOfLines={1}>
             {product.name}
           </Text>
           {/* Rating (Simulado para nivel profesional) */}
@@ -64,24 +64,24 @@ export const ProductCard: React.FC<Props> = ({
           </View>
         </View>
         
-        <Text style={styles.restaurantName} numberOfLines={1}>
+        <Text style={[styles.restaurantName, { color: colors.textSecondary }]} numberOfLines={1}>
           {restaurantName || product.restaurant?.name || "Restaurante local"}
         </Text>
 
         <View style={styles.detailsRow}>
           <View style={styles.priceBox}>
-            <Text style={[styles.price, { color: colors.primary, fontSize: normalize(18) }]}>
+            <Text style={[styles.price, { color: colors.warning, fontSize: normalize(18) }]}>
               {minPrice > 0 ? `S/ ${minPrice.toFixed(2)}` : "Consultar"}
             </Text>
             {variants.length > 1 && (
-              <Text style={styles.variantsLabel}>(más opciones)</Text>
+              <Text style={[styles.variantsLabel, { color: colors.textSecondary }]}>(más opciones)</Text>
             )}
           </View>
           
           {/* Info extra (Simulada) */}
           <View style={styles.timeInfo}>
-            <Ionicons name="time-outline" size={14} color="#8E8E93" />
-            <Text style={styles.timeText}>25-35 min</Text>
+            <Ionicons name="time-outline" size={14} color={colors.text} />
+            <Text style={[styles.timeText, { color: colors.text }]}>25-35 min</Text>
           </View>
         </View>
       </View>

@@ -155,10 +155,10 @@ export const CustomOrderModal: React.FC<Props> = ({
         
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.container}
+          style={[styles.container, { backgroundColor: colors.card }]}
         >
           {/* A. INDICADOR DE CIERRE */}
-          <View style={styles.dragHandle} />
+          <View style={[styles.dragHandle, { backgroundColor: colors.surfaceVariant }]} />
 
           {/* B. CABECERA CON ESTILO */}
           <View style={styles.header}>
@@ -170,22 +170,22 @@ export const CustomOrderModal: React.FC<Props> = ({
               />
             </View>
             <View style={styles.headerText}>
-              <Text style={styles.title}>Pedir {serviceType}</Text>
-              <Text style={styles.subtitle}>Lo que necesites, hasta tu puerta</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Pedir {serviceType}</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Lo que necesites, hasta tu puerta</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color={colors.textTertiary} />
+            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.surfaceVariant }]}>
+              <Ionicons name="close" size={20} color={colors.textInverse} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.form}>
             {/* C. INPUT DE DESCRIPCIÓN */}
-            <Text style={styles.label}>¿Qué debemos comprar por ti?</Text>
+            <Text style={[styles.label, { color: colors.text }]}>¿Qué debemos comprar por ti?</Text>
             <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Ej: 2 Panadol de 500mg, 1L de leche..."
-                placeholderTextColor={colors.textTertiary}
+                placeholderTextColor="#475569"
                 multiline
                 numberOfLines={4}
                 value={description}
@@ -196,13 +196,13 @@ export const CustomOrderModal: React.FC<Props> = ({
             </View>
 
             {/* D. INPUT DE REFERENCIA */}
-            <Text style={styles.label}>¿Dónde lo compramos? (Opcional)</Text>
+            <Text style={[styles.label, { color: colors.text }]}>¿Dónde lo compramos? (Opcional)</Text>
             <View style={styles.inputWrapper}>
-              <Ionicons name="location-outline" size={18} color={colors.textTertiary} style={styles.inputIcon} />
+              <Ionicons name="location-outline" size={18} color="#475569"style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Ej: En la tienda frente al parque..."
-                placeholderTextColor={colors.textTertiary}
+                placeholderTextColor="#475569"
                 value={addressReference}
                 onChangeText={setAddressReference}
                 editable={!isLoading}
@@ -212,7 +212,7 @@ export const CustomOrderModal: React.FC<Props> = ({
             {/* E. RESUMEN DE COSTO TIPO CARD */}
             <View style={styles.costCard}>
               <View style={styles.costInfo}>
-                <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
+                <Ionicons name="information-circle-outline" size={18} color={colors.info} />
                 <Text style={styles.costLabel}>Tarifa por el servicio</Text>
               </View>
               <Text style={styles.costValue}>S/ {SERVICE_FEE.toFixed(2)}</Text>

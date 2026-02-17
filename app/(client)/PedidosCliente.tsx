@@ -44,11 +44,11 @@ const PedidosCliente: React.FC = () => {
         {/* Header */}
         <View style={[styles.header, { backgroundColor: colors.background }]}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.textInverse}  />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Mis Pedidos</Text>
           <View style={styles.headerIcons}>
-            <Ionicons name="receipt-outline" size={22} color={colors.text} />
+            <Ionicons name="receipt-outline" size={22} color={colors.textInverse} />
           </View>
         </View>
 

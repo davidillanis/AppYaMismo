@@ -103,12 +103,12 @@ export default function ForgotPasswordScreen() {
         content: { flex: 1, padding: 20, justifyContent: "center" },
         header: { alignItems: "center", marginBottom: 40 },
         logoBox: { marginBottom: 20 },
-        logo: { width: 100, height: 50, resizeMode: "contain" },
+        logo: { width: 150, height: 150, resizeMode: "contain" },
         title: {
             fontSize: 28,
             fontWeight: "bold",
             color: colors.primary,
-            marginBottom: 8,
+            marginBottom: 4,
         },
         subtitle: {
             fontSize: 16,
@@ -138,10 +138,10 @@ export default function ForgotPasswordScreen() {
             flexDirection: "row",
             alignItems: "center",
             borderWidth: 1.5,
-            borderColor: colors.border,
+            borderColor: colors.primary,
             borderRadius: 12,
             paddingHorizontal: 14,
-            backgroundColor: colors.surface,
+            backgroundColor: "#fff",
             minHeight: 52,
         },
         icon: { marginRight: 10 },
@@ -165,7 +165,7 @@ export default function ForgotPasswordScreen() {
             shadowRadius: 6,
         },
         btnText: {
-            color: colors.textInverse,
+            color: "#fff",
             fontSize: 16,
             fontWeight: "600",
             fontFamily: colors.fontPrimary,
@@ -182,7 +182,7 @@ export default function ForgotPasswordScreen() {
         },
         linkBox: { alignItems: "center", marginTop: 20 },
         linkTxt: {
-            color: colors.primary,
+            color: colors.warning,
             fontSize: 14,
             fontWeight: "500",
             fontFamily: colors.fontSecondary,
@@ -253,7 +253,7 @@ export default function ForgotPasswordScreen() {
                             <Ionicons
                                 name="mail-outline"
                                 size={20}
-                                color={colors.textTertiary}
+                                color="#475569"
                                 style={styles.icon}
                             />
                             <TextInput
@@ -264,7 +264,7 @@ export default function ForgotPasswordScreen() {
                                 value={email}
                                 onChangeText={setEmail}
                                 style={styles.input}
-                                placeholderTextColor={colors.textTertiary}
+                                placeholderTextColor="#475569"
                             />
                         </View>
                     </View>

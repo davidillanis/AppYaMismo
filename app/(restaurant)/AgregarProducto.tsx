@@ -231,10 +231,10 @@ const AgregarProducto: React.FC = () => {
         <View style={{ flex: 1, backgroundColor: colors.background }}>
           {/* ... Tu UI del modal ... */}
           <ScrollView style={{ padding: 20 }}>
-            <Text style={styles.title}>Variantes</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Variantes</Text>
             {variants.map((item, index) => (
               <View key={index} style={styles.card}>
-                <TextInput placeholder="Nombre" value={item.name} style={styles.input} onChangeText={(v) => actualizarVariante(index, "name", v)} />
+                <TextInput placeholder="Tamaño" value={item.name} style={styles.input} onChangeText={(v) => actualizarVariante(index, "name", v)} />
                 <TextInput placeholder="Precio" keyboardType="numeric" value={item.price === 0 ? "" : String(item.price)} style={styles.input} onChangeText={(v) => actualizarVariante(index, "price", Number(v) || 0)} />
                 <TextInput placeholder="Stock" keyboardType="numeric" value={item.stock === 0 ? "" : String(item.stock)} style={styles.input} onChangeText={(v) => actualizarVariante(index, "stock", Number(v) || 0)} />
                 <TouchableOpacity onPress={() => eliminarVariante(index)} style={styles.deleteBtn}>

@@ -36,12 +36,12 @@ export const RestaurantCard: React.FC<Props> = ({
           {urlImagen ? (
             <Image source={{ uri: urlImagen }} style={styles.image} />
           ) : (
-            <View style={styles.placeholder}>
+            <View style={[styles.placeholder, { backgroundColor: colors.primary }]}>
               {/* Icono para "Todos" o sin imagen */}
               <Ionicons
                 name={name === "Todos" ? "restaurant" : "restaurant-outline"}
                 size={24}
-                color={isSelected ? colors.primary : colors.textInverse}
+                color={isSelected ? colors.warning : colors.text}
               />
             </View>
           )}
@@ -58,15 +58,15 @@ export const RestaurantCard: React.FC<Props> = ({
 
       <Text
         style={[
-          styles.name,
-          isSelected && { color: colors.primary, fontWeight: "900" },
+          styles.name, { color: colors.text },
+          isSelected && { color: colors.warning, fontWeight: "900" },
         ]}
         numberOfLines={1}
       >
         {name}
       </Text>
 
-      <Text style={styles.category} numberOfLines={1}>
+      <Text style={[styles.category, { color: colors.textSecondary }]} numberOfLines={1}>
         {categoria}
       </Text>
     </TouchableOpacity>

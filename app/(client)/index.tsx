@@ -127,9 +127,11 @@ const ServiceCardItem = memo(
   ({
     service,
     onPress,
+    colors,
   }: {
     service: (typeof QUICK_SERVICES)[number];
     onPress: (name: string) => void;
+    colors: any;
   }) => (
     <TouchableOpacity
       style={styles.serviceCard}
@@ -139,7 +141,7 @@ const ServiceCardItem = memo(
       <View style={[styles.serviceIconBox, { backgroundColor: service.color }]}>
         <Ionicons name={service.icon as any} size={26} color="#FFF" />
       </View>
-      <Text style={styles.serviceText}>{service.name}</Text>
+      <Text style={[styles.serviceText, { color: colors.text }]}>{service.name}</Text>
     </TouchableOpacity>
   ),
 );
@@ -201,12 +203,12 @@ const HomeHeaderComponent = ({
         <Ionicons
           name="search-outline"
           size={20}
-          color={colors.textSecondary}
+          color="#475569"
         />
         <TextInput
           placeholder="¿Qué se te antoja hoy?"
           style={styles.searchInput}
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor="#475569"
           value={searchText}
           onChangeText={setSearchText}
           // ====== OPTIMIZACIÓN #6: Reducir actualizaciones innecesarias en búsqueda ======
@@ -223,6 +225,7 @@ const HomeHeaderComponent = ({
               key={service.id}
               service={service}
               onPress={handleOpenCustomOrder}
+              colors={colors}
             />
           ))}
         </View>
@@ -288,9 +291,9 @@ const HomeHeaderComponent = ({
       {productCategories.length > 0 && (
         <View style={styles.menuSectionMargin}>
           <View style={styles.divider} />
-          <Text style={styles.menuHeadline}>
+          <Text style={[styles.menuHeadline, { color: colors.text }]}>
             Carta:{" "}
-            <Text style={{ color: colors.primary }}>
+            <Text style={{ color: colors.warning }}>
               {selectedRestaurantName}
             </Text>
           </Text>

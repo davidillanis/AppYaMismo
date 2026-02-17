@@ -65,7 +65,7 @@ export const ProductVariantModal: React.FC<Props> = ({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
           
           {/* A. INDICADOR DE ARRASTRE (Handle) */}
           <View style={styles.dragHandle} />
@@ -89,7 +89,7 @@ export const ProductVariantModal: React.FC<Props> = ({
           >
             {/* C. INFORMACIÓN DEL PRODUCTO */}
             <View style={styles.infoSection}>
-              <Text style={styles.productName}>{product.name}</Text>
+              <Text style={[styles.productName, { color: colors.text }]}>{product.name}</Text>
               {product.description && (
                 <Text style={styles.productDescription}>{product.description}</Text>
               )}
@@ -99,7 +99,7 @@ export const ProductVariantModal: React.FC<Props> = ({
 
             {/* D. SELECCIÓN DE VARIANTES (Cards modernas) */}
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Selecciona tu opción</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Selecciona tu opción</Text>
               {variants.length > 0 ? (
                 variants.map((variant) => {
                   const isSelected = selectedVariant?.id === variant.id;
@@ -107,21 +107,21 @@ export const ProductVariantModal: React.FC<Props> = ({
                     <TouchableOpacity
                       key={variant.id}
                       style={[
-                        styles.variantCard,
-                        isSelected && { borderColor: colors.primary, backgroundColor: `${colors.primary}05` }
+                        styles.variantCard, { borderColor: colors.button, backgroundColor: colors.surfaceVariant },
+                        isSelected && { borderColor: colors.warning, backgroundColor: colors.card }
                       ]}
                       onPress={() => setSelectedVariant(variant)}
                       activeOpacity={0.8}
                     >
                       <View style={styles.variantLeft}>
-                        <View style={[styles.outerCircle, isSelected && { borderColor: colors.primary }]}>
-                          {isSelected && <View style={[styles.innerCircle, { backgroundColor: colors.primary }]} />}
+                        <View style={[styles.outerCircle, , { borderColor: colors.textInverse}, isSelected && { borderColor: colors.warning }]}>
+                          {isSelected && <View style={[styles.innerCircle, { backgroundColor: colors.warning }]} />}
                         </View>
-                        <Text style={[styles.variantName, isSelected && { color: colors.primary }]}>
+                        <Text style={[styles.variantName, { color: colors.textInverse }, isSelected && { color: colors.warning }]}>
                           {variant.name}
                         </Text>
                       </View>
-                      <Text style={styles.variantPrice}>S/ {variant.price.toFixed(2)}</Text>
+                      <Text style={[styles.variantPrice, { color: colors.textInverse }, isSelected && { color: colors.warning }]}>S/ {variant.price.toFixed(2)}</Text>
                     </TouchableOpacity>
                   );
                 })
@@ -150,11 +150,11 @@ export const ProductVariantModal: React.FC<Props> = ({
           </ScrollView>
 
           {/* F. FOOTER CON PRECIO TOTAL (Sticky) */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, { backgroundColor: colors.background }]}>
             <TouchableOpacity
               style={[
                 styles.mainActionButton,
-                { backgroundColor: selectedVariant ? colors.primary : '#E5E5EA' }
+                { backgroundColor: selectedVariant ? colors.primary : colors.buttonSecondary }
               ]}
               disabled={!selectedVariant}
               onPress={handleAddToCart}

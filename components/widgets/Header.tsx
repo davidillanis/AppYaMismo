@@ -23,11 +23,11 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <LinearGradient colors={[colors.primary, colors.primary]} style={styles.header}>
       <TouchableOpacity onPress={onMenuPress} style={styles.menuButton}>
-        <Ionicons name="menu" size={normalize(24)} color={colors.card} />
+        <Ionicons name="menu" size={normalize(24)} color="#eefaf1ff" />
       </TouchableOpacity>
 
       <View style={styles.headerTitleContainer}>
-        <Text style={[styles.headerTitle, { color: colors.card }]}>{title}</Text>
+        <Text style={styles.headerTitle}>{title}</Text>
         <Text style={styles.headerSubtitle}>{subTitle}</Text>
       </View>
 
@@ -83,6 +83,7 @@ const createStyles = (colors: typeof Colors.light, normalize: (n: number) => num
       fontSize: normalize(22),
       fontWeight: 'bold',
       fontFamily: colors.fontTertiary,
+      color: "#eefaf1ff",
     },
     headerSubtitle: {
       fontSize: normalize(12),
