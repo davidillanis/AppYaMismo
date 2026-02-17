@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Hooks y Contextos
@@ -11,7 +11,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAuth } from '@/src/presentation/context/AuthContext';
 import { useRestaurantList } from '@/src/presentation/hooks/useRestaurantList';
-import { useWindowDimensions } from 'react-native';
+
 import { Drawer } from 'react-native-drawer-layout';
 
 export default function RestaurantSelectionScreen() {
@@ -47,16 +47,16 @@ export default function RestaurantSelectionScreen() {
       />
       <View style={styles.cardContent}>
         <Text style={[styles.cardTitle, { color: colors.text }]}>{item.name}</Text>
-        <Text style={styles.cardAddress} numberOfLines={1}>{item.address || "Sin dirección registrada"}</Text>
+        <Text style={[styles.cardAddress, { color: colors.textSecondary }]} numberOfLines={1}>{item.address || "Sin dirección registrada"}</Text>
 
         <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: item.enabled ? '#4CAF50' : '#ccc' }]} />
-          <Text style={{ color: item.enabled ? '#4CAF50' : '#888', fontSize: 12 }}>
+          <View style={[styles.statusDot, { backgroundColor: item.enabled ? colors.success : colors.error }]} />
+          <Text style={{ color: item.enabled ? colors.success : colors.error, fontSize: 12 }}>
             {item.enabled ? 'Operativo' : 'Inactivo'}
           </Text>
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#ccc" />
+      <Ionicons name="chevron-forward" size={20} color={colors.text} />
     </TouchableOpacity>
   );
 
@@ -97,9 +97,6 @@ export default function RestaurantSelectionScreen() {
             <Text style={[styles.welcomeText, { color: colors.textSecondary }]}>Bienvenido,</Text>
             <Text style={[styles.userName, { color: colors.text }]}>{user?.name}</Text>
           </View>
-          <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color={colors.primary} />
-          </TouchableOpacity>
         </View>
 
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Mis Restaurantes</Text>
@@ -139,7 +136,6 @@ const styles = StyleSheet.create({
   },
   welcomeText: { fontSize: 14 },
   userName: { fontSize: 20, fontWeight: 'bold' },
-  logoutButton: { padding: 8, backgroundColor: '#f0f0f0', borderRadius: 12 },
   sectionTitle: { fontSize: 18, fontWeight: '600', marginLeft: 20, marginBottom: 10 },
 
   // Card Styles

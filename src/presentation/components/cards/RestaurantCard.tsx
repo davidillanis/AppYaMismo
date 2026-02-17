@@ -27,7 +27,7 @@ export const RestaurantCard: React.FC<Props> = ({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       onPress={onSelect}
       activeOpacity={0.85}
     >
@@ -41,7 +41,7 @@ export const RestaurantCard: React.FC<Props> = ({
               <Ionicons
                 name={name === "Todos" ? "restaurant" : "restaurant-outline"}
                 size={24}
-                color={isSelected ? colors.primary : colors.textTertiary}
+                color={isSelected ? colors.primary : colors.textInverse}
               />
             </View>
           )}

@@ -206,7 +206,7 @@ const HomeHeaderComponent = ({
         <TextInput
           placeholder="¿Qué se te antoja hoy?"
           style={styles.searchInput}
-          placeholderTextColor={colors.textTertiary}
+          placeholderTextColor={colors.textSecondary}
           value={searchText}
           onChangeText={setSearchText}
           // ====== OPTIMIZACIÓN #6: Reducir actualizaciones innecesarias en búsqueda ======
@@ -216,7 +216,7 @@ const HomeHeaderComponent = ({
 
       {/* SERVICIOS RÁPIDOS */}
       <View style={styles.sectionMargin}>
-        <Text style={styles.sectionTitle}>¿Cómo te ayudamos?</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>¿Cómo te ayudamos?</Text>
         <View style={styles.quickServicesGrid}>
           {QUICK_SERVICES.map((service) => (
             <ServiceCardItem
@@ -230,7 +230,7 @@ const HomeHeaderComponent = ({
 
       {/* CATEGORÍAS */}
       <View style={styles.sectionMargin}>
-        <Text style={styles.sectionTitle}>Categorias</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Categorias</Text>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -254,7 +254,7 @@ const HomeHeaderComponent = ({
 
       {/* RESTAURANTES FILTRADOS */}
       <View style={styles.sectionMargin}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
           {selectedRestCategory === "Todos"
             ? "Restaurantes Disponibles"
             : `Locales de ${selectedRestCategory}`}
@@ -661,6 +661,7 @@ const styles = StyleSheet.create({
   sectionMargin: {
     marginTop: 28,
     paddingHorizontal: 20,
+    backgroundColor: 'transparent',
   },
 
   menuSectionMargin: {

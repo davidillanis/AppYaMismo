@@ -180,8 +180,8 @@ const createStyles = (
     menuItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
     menuIconContainer: { width: normalize(32), height: normalize(32), borderRadius: normalize(16), backgroundColor: colors.surfaceVariant, justifyContent: "center", alignItems: "center", marginRight: 16 },
     menuText: { fontSize: normalize(16), color: colors.text, flex: 1 },
-    drawerFooter: { padding: 20, borderTopWidth: 1, borderTopColor: colors.border },
-    logoutButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 12 },
+    drawerFooter: { padding: 50, borderTopWidth: 1, borderTopColor: colors.border },
+    logoutButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 12, marginTop: -30 },
     // 🟢 Estilo para el botón de login en el footer
     loginButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 12 },
     logoutText: { fontSize: normalize(16), color: colors.textInverse, fontWeight: "600", marginLeft: 8 },

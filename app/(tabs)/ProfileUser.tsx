@@ -258,7 +258,7 @@ const ProfileUser: React.FC = () => {
             ]}
             disabled={isUpdating}
           >
-            <Ionicons name="create-outline" size={18} color={colors.primary} />
+            <Ionicons name="create-outline" size={18} color={colors.warning} />
           </TouchableOpacity>
         )}
       </View>
@@ -310,10 +310,10 @@ const ProfileUser: React.FC = () => {
         {/* Encabezado */}
         <View style={styles.customHeader}>
           <TouchableOpacity
-            style={[styles.backButton, { backgroundColor: colors.button }]}
+            style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back" size={24} color={colors.textInverse} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>
             Mi Perfil

@@ -56,6 +56,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         case ERole.CLIENTE:
           router.replace("/(client)");
           break;
+        case ERole.RESTAURANTE:
+            router.replace("/(restaurant)");
+            break;
         default:
           router.replace("/login");
           break;

@@ -172,8 +172,8 @@ const AgregarProducto: React.FC = () => {
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
         {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.button }]} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color={colors.textInverse} />
+          <TouchableOpacity style={[styles.backButton]} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={[styles.title, { color: colors.text, marginLeft: 10 }]}>Agregar Producto</Text>
         </View>
@@ -206,19 +206,19 @@ const AgregarProducto: React.FC = () => {
 
         {/* FORMULARIO */}
         {/* ... (Tus inputs de nombre, descripción, etc.) ... */}
-        <Text style={styles.label}>Nombre</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Nombre</Text>
         <TextInput value={name} onChangeText={setName} style={styles.input} />
 
-        <Text style={styles.label}>Descripción</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Descripción</Text>
         <TextInput value={description} onChangeText={setDescription} style={[styles.input, { height: 80 }]} multiline />
 
-        <Text style={styles.label}>Categoría</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Categoría</Text>
         <TextInput value={category} onChangeText={setCategory} style={styles.input} />
 
         {/* VARIANTES Y GUARDAR */}
         <TouchableOpacity style={[styles.variantButton, { backgroundColor: colors.button }]} onPress={() => setShowVariants(true)}>
-          <Ionicons name="layers-outline" size={20} color="#fff" />
-          <Text style={styles.variantText}>{variants.length > 0 ? `Variantes (${variants.length})` : "Configurar Variantes"}</Text>
+          <Ionicons name="layers-outline" size={20} color={colors.textInverse} />
+          <Text style={[styles.variantText, { color: colors.textInverse }]}>{variants.length > 0 ? `Variantes (${variants.length})` : "Configurar Variantes"}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.saveButton, { backgroundColor: loading ? "#999" : colors.primary }]} onPress={guardarProducto} disabled={loading}>
@@ -268,11 +268,11 @@ const AgregarProducto: React.FC = () => {
 // ... (Tus estilos originales createStyles) ...
 const createStyles = (colors: any, normalize: any) => StyleSheet.create({
   container: { flex: 1, padding: 20 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
-  backButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  title: { fontSize: normalize(18), fontWeight: "bold" },
+  header: { flexDirection: "row", alignItems: "center", marginBottom: 5 },
+  backButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", marginTop: 15, },
+  title: { fontSize: normalize(18), fontWeight: "bold", marginTop: 15, },
   label: { fontWeight: "bold", marginTop: 10 },
-  input: { backgroundColor: "#F8EBD3", borderRadius: 8, padding: 10, marginTop: 5 },
+  input: { backgroundColor: "#F8EBD3", borderRadius: 8, padding: 10, marginTop: 5, },
   variantButton: { flexDirection: "row", gap: 10, borderRadius: 10, padding: 15, marginTop: 20, alignItems: "center", justifyContent: "center" },
   variantText: { color: "#fff", fontWeight: "bold" },
   saveButton: { backgroundColor: colors.primary, padding: 15, alignItems: "center", borderRadius: 10, marginTop: 20 },
@@ -282,7 +282,7 @@ const createStyles = (colors: any, normalize: any) => StyleSheet.create({
   fab: { position: "absolute", bottom: 80, right: 20, backgroundColor: colors.primary, width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center" },
   // Agregué estos que faltaban en el snippet reducido para que compile bien
   logo: { width: 50, height: 50, borderRadius: 25 },
-  imageSection: { alignItems: 'center', marginVertical: 20 },
+  imageSection: { alignItems: 'center', marginVertical: 10 },
   imagePreviewContainer: {
     width: '100%',
     height: 200,
@@ -298,7 +298,7 @@ const createStyles = (colors: any, normalize: any) => StyleSheet.create({
   previewImage: { width: '100%', height: '100%' },
   placeholderContainer: { alignItems: 'center' },
   imageText: { color: "#A55A00", fontWeight: "bold", marginTop: 8 },
-  imageActions: { flexDirection: 'row', gap: 15, marginTop: 15 },
+  imageActions: { flexDirection: 'row', gap: 20, marginTop: 15 },
   iconButton: {
     flexDirection: 'row',
     backgroundColor: colors.primary,

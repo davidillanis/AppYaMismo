@@ -1,3 +1,4 @@
+import { RestaurantHeader } from "@/components/widgets/HeaderRestaurant";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { normalizeScreen } from "@/src/infrastructure/configuration/utils/GlobalConfig";
@@ -24,7 +25,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Componentes
-import { CategoryChip } from "@/src/presentation/components/filters/CategoryChip";
 import { ProductStatusFilter } from "@/src/presentation/components/filters/ProductStatusFilter";
 
 const RestaurantMenuScreen: React.FC = () => {
@@ -77,22 +77,39 @@ const RestaurantMenuScreen: React.FC = () => {
 
   const styles = createStyles(colors, normalize);
 
+  const CategoryChip = ({ name, isSelected, onSelect }: any) => (
+    <TouchableOpacity
+      onPress={onSelect}
+      style={{
+        backgroundColor: isSelected ? "#3498db" : "#eee",
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 16,
+        marginRight: 8,
+      }}
+    >
+      <Text style={{ color: isSelected ? "#fff" : "#333" }}>{name}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       {/* --- HEADER --- */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <View style={{flex: 1}}>
-             <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-                {loadingRestaurant ? "Cargando..." : restaurant?.name}
-             </Text>
-             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestión de Carta</Text>
-        </View>
-      </View>
+      <RestaurantHeader
+        title={restaurant?.name || ""}
+        subtitle="Gestión de Carta"
+        colors={colors}
+        loading={loadingRestaurant}
+        normalize={normalize}
+        onProfilePress={() =>
+          router.push({
+            pathname: "/(tabs)/ProfileRestaurant",
+            params: { restaurantId: currentRestaurantId }, // 👈 se envía el id real
+          })
+        }
+      />
 
       {/* 🔍 BUSCADOR */}
       <View style={styles.searchContainer}>
@@ -160,7 +177,7 @@ const RestaurantMenuScreen: React.FC = () => {
                 <View style={styles.rowBetween}>
                   <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={2}>{item.name}</Text>
                   {/* Precio Principal */}
-                  <Text style={styles.priceText}>
+                  <Text style={[styles.priceText, { color: colors.text}]}>
                     {item.variant?.[0] ? `S/.${item.variant[0].price.toFixed(2)}` : '--'}
                   </Text>
                 </View>
@@ -168,30 +185,30 @@ const RestaurantMenuScreen: React.FC = () => {
                 {/* Estado y Switch */}
                 <View style={styles.rowBetween}>
                     <View style={styles.statusContainer}>
-                        <View style={[styles.statusDot, { backgroundColor: item.enabled ? '#2ECC71' : '#E74C3C' }]} />
-                        <Text style={{ fontSize: 12, color: item.enabled ? '#2ECC71' : '#E74C3C', fontWeight: '600' }}>
+                        <View style={[styles.statusDot, { backgroundColor: item.enabled ? colors.success : colors.error }]} />
+                        <Text style={{ fontSize: 12, color: item.enabled ? colors.success : colors.error, fontWeight: '600' }}>
                             {item.enabled ? "Disponible" : "Agotado"}
                         </Text>
                     </View>
                     <Switch
                         value={item.enabled ?? true}
                         onValueChange={() => toggleAvailability(item)}
-                        trackColor={{ false: "#ccc", true: colors.primary + "80" }}
-                        thumbColor={item.enabled ? colors.primary : "#f4f3f4"}
+                        trackColor={{ false: "#ccc", true: colors.success + "80" }}
+                        thumbColor={item.enabled ? colors.success : "#f4f3f4"}
                     />
                 </View>
 
                 {/* Botones Editar/Eliminar */}
                 <View style={styles.buttonRow}>
                     <TouchableOpacity
-                        style={[styles.editButton, { backgroundColor: colors.primary }]}
+                        style={[styles.editButton, { backgroundColor: colors.warning }]}
                         onPress={() => router.push({ pathname: "/(restaurant)/EditarProducto", params: { id: item.id } } as any)}
                     >
                         <Ionicons name="create-outline" size={16} color="#fff" />
                         <Text style={styles.buttonText}>Editar</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={styles.deleteButton}
+                        style={[styles.deleteButton, { backgroundColor: colors.primary }]}
                         onPress={() => handleDeleteProduct(item.id, item.name)}
                     >
                         <Ionicons name="trash-outline" size={16} color="#fff" />
@@ -236,10 +253,6 @@ const RestaurantMenuScreen: React.FC = () => {
 
 const createStyles = (colors: any, normalize: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  headerRow: { flexDirection: 'row', alignItems: 'center', padding: 15, paddingBottom: 5 },
-  backButton: { marginRight: 10, padding: 5 },
-  title: { fontSize: normalize(20), fontWeight: "bold" },
-  subtitle: { fontSize: normalize(14) },
   searchContainer: {
       flexDirection: "row", alignItems: "center", backgroundColor: "#fff",
       marginHorizontal: 15, marginVertical: 10, paddingHorizontal: 10,
@@ -268,12 +281,12 @@ const createStyles = (colors: any, normalize: any) => StyleSheet.create({
   emptyText: { textAlign: 'center', color: '#888', fontSize: 16 },
   // Estilos de FABs
   fabOrders: {
-      position: "absolute", bottom: 100, right: 20, width: 50, height: 50, borderRadius: 25,
+      position: "absolute", bottom: 120, right: 20, width: 50, height: 50, borderRadius: 25,
       backgroundColor: "#3498db", alignItems: "center", justifyContent: "center",
       elevation: 6, shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 4,
   },
   fabAdd: {
-      position: "absolute", bottom: 30, right: 20, width: 60, height: 60, borderRadius: 30,
+      position: "absolute", bottom: 50, right: 20, width: 60, height: 60, borderRadius: 30,
       backgroundColor: colors.primary, alignItems: "center", justifyContent: "center",
       elevation: 6, shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 4,
   },

@@ -4,7 +4,7 @@ import { Stack } from "expo-router";
 
 export default function Layout() {
     return (
-        <ProtectedScreen allowedRoles={[ERole.REPARTIDOR]}>
+        <ProtectedScreen allowedRoles={[ERole.RESTAURANTE]}>
             <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" />
             </Stack>

@@ -97,7 +97,7 @@ export default function OrdenesScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
 
         <Text style={styles.title}>
@@ -218,8 +218,6 @@ const createStyles = (colors: any, normalize: (n: number) => number) =>
     backButton: {
       width: 38,
       height: 38,
-      borderRadius: 19,
-      backgroundColor: "#A4243B",
       alignItems: "center",
       justifyContent: "center",
       elevation: 5,
