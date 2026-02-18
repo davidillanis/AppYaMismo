@@ -1,5 +1,6 @@
 import { baseURL } from '@/src/infrastructure/configuration/http/apiClient';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
+import Toast from 'react-native-toast-message';
 import SockJS from 'sockjs-client';
 import { OrderCreateRequestDTO } from '../../entities/OrderEntity';
 import { ResponseStatusDTO } from '../../types/ResponseStatusDTO';
@@ -38,6 +39,11 @@ export interface ProductSocketDTO {
     id: number;
     name: string;
     urlImage: string;
+    restaurant?: {
+        name: string;
+        latitude: number;
+        longitude: number;
+    }
 }
 export interface UserSocketDTO {
     id: number;
@@ -64,11 +70,18 @@ class OrderWebSocketService {
     onDealerOrdersUpdate?: (order: OrderSocketDTO) => void;
     onOrderError?: (error: ResponseStatusDTO<null>) => void;
 
+    get connected(): boolean {
+        return !!this.client?.connected;
+    }
 
-    connect(dealerId: number) {
+
+    connect(dealerId: number, token?: string) {
         this.client = new Client({
             webSocketFactory: () => new SockJS(`${baseURL}/ws`),
             reconnectDelay: 5000,
+            connectHeaders: token ? {
+                Authorization: `Bearer ${token}`
+            } : {},
         });
 
         this.client.onConnect = () => {
@@ -89,6 +102,11 @@ class OrderWebSocketService {
             );
         };
 
+        this.client.onStompError = (frame) => {
+            console.error('Broker reported error: ' + frame.headers['message']);
+            console.error('Additional details: ' + frame.body);
+        };
+
         this.client.activate();
     }
 
@@ -104,8 +122,17 @@ class OrderWebSocketService {
 
     /** ACTUALIZAR ESTADO */
     updateStatus(order: OrderStatusUpdateDTO) {
-        if (!this.client) return;
-        this.client.publish({
+        if (!this.connected) {
+            Toast.show({
+                type: "warning",
+                text1: "No Conectado",
+                text2: "STOMP no conectado aún, no se puede actualizar estado",
+                visibilityTime: 3000,
+                topOffset: 60,
+            });
+            return;
+        }
+        this.client?.publish({
             destination: '/app/order.status.update',
             body: JSON.stringify(order)
         });
@@ -114,6 +141,7 @@ class OrderWebSocketService {
     disconnect() {
         this.subscription?.unsubscribe();
         this.client?.deactivate();
+        this.client = null;
     }
 }
 

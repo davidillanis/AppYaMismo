@@ -10,7 +10,7 @@ import { useAuth } from "@/src/presentation/context/AuthContext";
 import { formatDate } from "@/src/presentation/utils/OrderStatusUtils";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -219,7 +219,8 @@ const PendingTab = () => {
   const [loadingOrderId, setLoadingOrderId] = useState<number | null>(null);
   const loadingOrderIdRef = useRef<number | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Record<number, boolean>>({});
-  const orderSocket = useMemo(() => new OrderWebSocketService(), []);
+  // Instanciar socket sin renderizarlo en cada ciclo, usando ref para mantener estado
+  const orderSocket = useRef(new OrderWebSocketService()).current;
 
   useEffect(() => {
     listOrder({
@@ -286,9 +287,17 @@ const PendingTab = () => {
         topOffset: 50,
       });
     };
-    orderSocket.connect(user?.dealerId || 0);
-    setConnected(true);
-    return () => orderSocket.disconnect();
+    orderSocket.connect(user?.dealerId || 0, user?.accessToken);
+
+    // Polling simple para actualizar estado de conexión visualmente
+    const interval = setInterval(() => {
+      setConnected(orderSocket.connected);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      orderSocket.disconnect();
+    }
   }, [orderSocket, user, normalize]);
 
 
@@ -305,8 +314,9 @@ const PendingTab = () => {
   // Helper to group products by restaurant
   const getGroupedProducts = (details: any[]) => {
     const groups: Record<string, any[]> = {};
+    if (!details || !Array.isArray(details)) return [];
     details.forEach(item => {
-      const rName = item.product.restaurant?.name || "Restaurante";
+      const rName = item?.product?.restaurant?.name || "Restaurante";
       if (!groups[rName]) groups[rName] = [];
       groups[rName].push(item);
     });
@@ -322,9 +332,9 @@ const PendingTab = () => {
         longitude: firstProduct?.restaurant?.longitude || order.longitude,
         name: restaurantName || 'Restaurante',
         products: items.map(item => ({
-          name: item.product.name,
-          price: item.unitPrice,
-          quantity: item.amount
+          name: item?.product?.name || "Producto",
+          price: item?.unitPrice || 0,
+          quantity: item?.amount || 0
         }))
       };
     });
@@ -334,7 +344,7 @@ const PendingTab = () => {
       customer: {
         latitude: order.latitude,
         longitude: order.longitude,
-        name: `${order.customer?.userEntity.name} ${order.customer?.userEntity.lastName}`.trim()
+        name: `${order.customer?.userEntity?.name || ''} ${order.customer?.userEntity?.lastName || ''}`.trim()
       }
     }
   };
@@ -381,7 +391,7 @@ const PendingTab = () => {
               <View style={styles.productsSummary}>
                 <Ionicons name="fast-food-outline" size={normalize(14)} color={colors.warning} />
                 <Text style={[styles.productsSummaryText, { color: colors.warning }]}>
-                  {order.orderDetails.length} {order.orderDetails.length === 1 ? "Item" : "Items"}
+                  {order.orderDetails?.length || 0} {(order.orderDetails?.length || 0) === 1 ? "Item" : "Items"}
                 </Text>
               </View>
 
@@ -395,7 +405,7 @@ const PendingTab = () => {
                 })}>
                 <Ionicons name={"location"} size={20} color={colors.success} style={styles.locationButton} />
               </TouchableOpacity>
-              <Text style={styles.dateText}>{formatDate(order.createdAt)}</Text>
+              <Text style={styles.dateText}>{order.createdAt ? formatDate(order.createdAt) : "Fecha desconocida"}</Text>
               <TouchableOpacity activeOpacity={0.7} onPress={() => toggleExpanded(order.id)}>
                 <Ionicons name={expandedOrders[order.id] ? "chevron-up" : "chevron-down"} size={22} color={colors.text} style={{ padding: normalize(7) }} />
               </TouchableOpacity>
@@ -415,12 +425,12 @@ const PendingTab = () => {
 
                     {items.map((od, index) => (
                       <View key={index} style={styles.productRow}>
-                        {od.product.urlImage && (
+                        {od.product?.urlImage && (
                           <Image source={{ uri: od.product.urlImage }} style={styles.productThumb} resizeMode="cover" />
                         )}
                         <View style={styles.productInfo}>
                           <Text style={[styles.productName, { color: colors.text }]} numberOfLines={1}>
-                            {od.product.name}
+                            {od.product?.name}
                           </Text>
                           <Text style={[styles.productMeta, { color: colors.text }]}>
                             x{od.amount} • S/ {od.unitPrice.toFixed(2)}
@@ -439,11 +449,11 @@ const PendingTab = () => {
                   <View style={styles.infoContent}>
                     <Text style={[styles.infoLabel, { color: colors.info }]}>Cliente:</Text>
                     <Text style={[styles.infoValue, { color: colors.text }]}>
-                      {order.customer?.userEntity.name} {order.customer?.userEntity.lastName}
+                      {order.customer?.userEntity?.name} {order.customer?.userEntity?.lastName}
                     </Text>
                     <View style={styles.phoneRow}>
                       <Ionicons name="call-outline" size={normalize(12)} color={colors.success} />
-                      <Text style={[styles.phoneText, { color: colors.success }]}>{order.customer?.userEntity.phone}</Text>
+                      <Text style={[styles.phoneText, { color: colors.success }]}>{order.customer?.userEntity?.phone}</Text>
                     </View>
                   </View>
                 </View>
@@ -456,7 +466,7 @@ const PendingTab = () => {
                   <View style={styles.infoContent}>
                     <Text style={[styles.infoLabel, { color: colors.text }]}>Dirección:</Text>
                     <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={2}>
-                      {order.customer?.userEntity.address} ({order.latitude}, {order.longitude})
+                      {order.customer?.userEntity?.address} ({order.latitude}, {order.longitude})
                     </Text>
                   </View>
                 </View>
@@ -471,7 +481,8 @@ const PendingTab = () => {
             <>
               {order.orderStatus === EOrderStatus.PENDIENTE && (
                 <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: colors.primary }]}
+                  style={[styles.actionButton, { backgroundColor: connected ? colors.primary : '#ccc' }]}
+                  disabled={!connected}
                   onPress={() => updateStatus(order.id, EOrderStatus.EN_CAMINO)}
                 >
                   <Text style={styles.actionButtonText}>ACEPTAR PEDIDO</Text>
