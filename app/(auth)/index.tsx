@@ -1,7 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import YoutubePlayer from 'react-native-youtube-iframe';
 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -11,10 +12,13 @@ const Welcome: React.FC = () => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'normal'];
 
+  // 🔗 Solo el ID del video, no la URL completa
+  const videoId = 'vnII48b0r7U';
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#DCCAA1" />
-      
+
       {/* Fondo con degradado */}
       <LinearGradient
         colors={[colors.background, colors.background]}
@@ -24,17 +28,24 @@ const Welcome: React.FC = () => {
       />
 
       <View style={styles.content}>
-        {/* Imagen del tutorial (por ahora en lugar de video) */}
-        <Image
-          source={require('@/assets/images/splash-icon.png')}
-          style={styles.image}
-          resizeMode="contain"
-        />
+        {/* 🎥 Video de YouTube */}
+        <View style={styles.videoContainer}>
+          <YoutubePlayer
+            height={220}
+            width={Dimensions.get('window').width * 0.9}
+            videoId={videoId}
+            play={false} // cambia a true si quieres que empiece automáticamente
+            webViewProps={{
+              allowsFullscreenVideo: true,
+              javaScriptEnabled: true,
+            }}
+          />
+        </View>
 
-        {/* Texto debajo de la imagen */}
-        <Text style={[styles.tutorialText, { color: colors.textSecondary }]}>Tutorial de cómo pedir en Ya Mismo</Text>
+        <Text style={[styles.tutorialText, { color: colors.textSecondary }]}>
+          Tutorial de cómo pedir en Ya Mismo
+        </Text>
 
-        {/* Botón EMPEZAR */}
         <TouchableOpacity
           style={[styles.buttonContainer]}
           onPress={() => router.replace('/login')}
@@ -45,7 +56,7 @@ const Welcome: React.FC = () => {
             end={{ x: 1, y: 1 }}
             style={styles.button}
           >
-            <Text style={[styles.buttonText, { color:"#fff" }]}>EMPEZAR</Text>
+            <Text style={[styles.buttonText, { color: "#fff" }]}>EMPEZAR</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -53,6 +64,7 @@ const Welcome: React.FC = () => {
   );
 };
 
+const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -69,12 +81,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  image: {
-    width: '90%',
-    height: 350,
-    borderRadius: 16,
-    backgroundColor: '#333',
+  videoContainer: {
+    width: width * 0.9,
+    height: 220,
+    borderRadius: 12,
+    overflow: 'hidden',
     marginBottom: 20,
+    backgroundColor: '#000',
   },
   tutorialText: {
     fontSize: 14,
@@ -84,30 +97,24 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonContainer: {
-    width: '90%',
-    height: 56, 
-    borderRadius: 10, 
-    overflow: 'hidden', 
+    width: '100%',
+    height: 56,
+    borderRadius: 10,
+    overflow: 'hidden',
     marginVertical: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 8, 
+    elevation: 8,
   },
   button: {
-    width: '100%',          
+    width: 150,
     height: 56,
     borderRadius: 16,
-    paddingHorizontal: 32,   
-    paddingVertical: 16,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#667eea',
-  },
-  buttonPressed: {
-    backgroundColor: '#5a67d8', 
-    transform: [{ scale: 0.98 }], 
   },
   buttonText: {
     color: '#FFFFFF',
@@ -117,4 +124,6 @@ const styles = StyleSheet.create({
 });
 
 export default Welcome;
+
+
 
