@@ -1,7 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// import YoutubePlayer from 'react-native-youtube-iframe';
 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -10,6 +11,9 @@ const Welcome: React.FC = () => {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'normal'];
+
+  // 🔗 Solo el ID del video, no la URL completa
+  const videoId = 'vnII48b0r7U';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -31,10 +35,10 @@ const Welcome: React.FC = () => {
           resizeMode="contain"
         />
 
-        {/* Texto debajo de la imagen */}
-        <Text style={[styles.tutorialText, { color: colors.textSecondary }]}>Tutorial de cómo pedir en Ya Mismo</Text>
+        <Text style={[styles.tutorialText, { color: colors.textSecondary }]}>
+          Tutorial de cómo pedir en Ya Mismo
+        </Text>
 
-        {/* Botón EMPEZAR */}
         <TouchableOpacity
           style={[styles.buttonContainer]}
           onPress={() => router.replace('/login')}
@@ -53,6 +57,7 @@ const Welcome: React.FC = () => {
   );
 };
 
+const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -70,11 +75,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   image: {
-    width: '90%',
-    height: 350,
-    borderRadius: 16,
-    backgroundColor: '#333',
+    width: width * 0.5,
+    height: width * 0.5,
     marginBottom: 20,
+  },
+  videoContainer: {
+    width: width * 0.9,
+    height: 220,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 20,
+    backgroundColor: '#000',
   },
   tutorialText: {
     fontSize: 14,
@@ -117,4 +128,3 @@ const styles = StyleSheet.create({
 });
 
 export default Welcome;
-
