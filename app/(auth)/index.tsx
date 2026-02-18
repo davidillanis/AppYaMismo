@@ -14,7 +14,7 @@ const Welcome: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#DCCAA1" />
-      
+
       {/* Fondo con degradado */}
       <LinearGradient
         colors={[colors.background, colors.background]}
@@ -26,7 +26,7 @@ const Welcome: React.FC = () => {
       <View style={styles.content}>
         {/* Imagen del tutorial (por ahora en lugar de video) */}
         <Image
-          source={require('@/assets/images/splash-icon.png')}
+          source={require('@/assets/images/icono.png')}
           style={styles.image}
           resizeMode="contain"
         />
@@ -45,7 +45,7 @@ const Welcome: React.FC = () => {
             end={{ x: 1, y: 1 }}
             style={styles.button}
           >
-            <Text style={[styles.buttonText, { color:"#fff" }]}>EMPEZAR</Text>
+            <Text style={[styles.buttonText, { color: "#fff" }]}>EMPEZAR</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -85,29 +85,29 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '90%',
-    height: 56, 
-    borderRadius: 10, 
-    overflow: 'hidden', 
+    height: 56,
+    borderRadius: 10,
+    overflow: 'hidden',
     marginVertical: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 8, 
+    elevation: 8,
   },
   button: {
-    width: '100%',          
+    width: '100%',
     height: 56,
     borderRadius: 16,
-    paddingHorizontal: 32,   
+    paddingHorizontal: 32,
     paddingVertical: 16,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#667eea',
   },
   buttonPressed: {
-    backgroundColor: '#5a67d8', 
-    transform: [{ scale: 0.98 }], 
+    backgroundColor: '#5a67d8',
+    transform: [{ scale: 0.98 }],
   },
   buttonText: {
     color: '#FFFFFF',
