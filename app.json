@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "AppYaMismo",
-    "slug": "AppYaMismo",
+    "name": "YaMismo",
+    "slug": "YaMismo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icono.png",
-    "scheme": "appyamismo",
+    "scheme": "yamismo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -34,10 +34,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo2.png",
+          "image": "./assets/images/toque.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#E4DABF",
           "dark": {
             "backgroundColor": "#000000"
           }
