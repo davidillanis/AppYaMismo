@@ -47,7 +47,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
         {/* 🟢 Si es invitado, mostramos textos genéricos */}
         <Text style={styles.profileName}>{user?.name || "Invitado"}</Text>
         <Text style={styles.profileEmail}>{user?.email || "Explora nuestra app"}</Text>
-        
+
         {!isGuest && (
           <View style={styles.profileBadge}>
             <Text style={styles.profileBadgeText}>{authority}</Text>
@@ -56,7 +56,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       </LinearGradient>
 
       <ScrollView
-        style={[styles.menuContainer, { backgroundColor: colors.background}]}
+        style={[styles.menuContainer, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
       >
         {menuItems.map((item, index) => (
@@ -117,13 +117,10 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
 
       {/* 🟢 FOOTER DINÁMICO: Solo muestra "Cerrar sesión" si hay un usuario logueado */}
       {!isGuest ? (
-        <View style={[styles.drawerFooter, { backgroundColor: colors.background}]}>
-          <TouchableOpacity 
-            style={[styles.logoutButton, { backgroundColor: colors.warning }]} 
-            onPress={async () => {
-              await onLogout();
-              router.replace("/(auth)/login");
-            }}
+        <View style={[styles.drawerFooter, { backgroundColor: colors.background }]}>
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: colors.warning }]}
+            onPress={async () => { await onLogout(); }}
           >
             <Ionicons
               name="log-out-outline"
@@ -135,9 +132,9 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
         </View>
       ) : (
         /* 🟢 Si es invitado, mostramos un botón para Iniciar Sesión */
-        <View style={[styles.drawerFooter, { backgroundColor: colors.background}]}>
-          <TouchableOpacity 
-            style={[styles.loginButton, { backgroundColor: colors.primary }]} 
+        <View style={[styles.drawerFooter, { backgroundColor: colors.background }]}>
+          <TouchableOpacity
+            style={[styles.loginButton, { backgroundColor: colors.primary }]}
             onPress={() => router.replace("/(auth)/login")}
           >
             <Ionicons
@@ -146,7 +143,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
               color={colors.textInverse}
             />
             <Text style={styles.logoutText}>Iniciar Sesión</Text>
-            
+
           </TouchableOpacity>
           <Text style={styles.VacioText}></Text>
         </View>
@@ -187,7 +184,7 @@ const createStyles = (
     logoutText: { fontSize: normalize(16), color: colors.textInverse, fontWeight: "600", marginLeft: 8 },
     roleMenuItem: { backgroundColor: colors.successLight, borderLeftWidth: 4, borderLeftColor: colors.secondary },
     permissionsText: { fontSize: normalize(16), fontWeight: "700", color: colors.text, paddingHorizontal: 20, paddingVertical: 12, marginTop: 12, marginBottom: 8, backgroundColor: colors.surfaceVariant, borderRadius: 8, borderLeftWidth: 4, borderLeftColor: colors.primary },
-    VacioText: { padding:8 },
+    VacioText: { padding: 8 },
   });
 
 export default DrawerMenu;

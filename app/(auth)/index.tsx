@@ -1,8 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Dimensions, Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-// import YoutubePlayer from 'react-native-youtube-iframe';
+import { Dimensions, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import YoutubePlayer from 'react-native-youtube-iframe';
 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -12,14 +12,13 @@ const Welcome: React.FC = () => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'normal'];
 
-  // 🔗 Solo el ID del video, no la URL completa
-  const videoId = 'vnII48b0r7U';
+  // 🎥 Nuevo video
+  const videoId = 'jPSdpXr7j1A';
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#DCCAA1" />
 
-      {/* Fondo con degradado */}
       <LinearGradient
         colors={[colors.background, colors.background]}
         style={styles.gradientBackground}
@@ -28,15 +27,24 @@ const Welcome: React.FC = () => {
       />
 
       <View style={styles.content}>
-        {/* Imagen del tutorial (por ahora en lugar de video) */}
-        <Image
-          source={require('@/assets/images/icono.png')}
-          style={styles.image}
-          resizeMode="contain"
-        />
+        {/* 🎥 Video centrado y recortado */}
+        <View style={styles.videoCropContainer}>
+          <View style={styles.videoInner}>
+            <YoutubePlayer
+              height={310}
+              width={Dimensions.get('window').width * 1.5} // más ancho para recortar laterales
+              videoId={videoId}
+              play={false}
+              webViewProps={{
+                allowsFullscreenVideo: true,
+                javaScriptEnabled: true,
+              }}
+            />
+          </View>
+        </View>
 
         <Text style={[styles.tutorialText, { color: colors.textSecondary }]}>
-          Tutorial de cómo pedir en Ya Mismo
+          Tutorial de cómo pedir en YaMismo
         </Text>
 
         <TouchableOpacity
@@ -58,6 +66,7 @@ const Welcome: React.FC = () => {
 };
 
 const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -74,18 +83,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  image: {
-    width: width * 0.5,
-    height: width * 0.5,
+  // 🔍 Recorte central del video
+  videoCropContainer: {
+    width: width * 0.7,     // visible solo el centro
+    height: 540,            // altura visible
+    overflow: 'hidden',     // corta lo que sobresale
+    borderRadius: 16,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  videoContainer: {
-    width: width * 0.9,
-    height: 220,
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 20,
-    backgroundColor: '#000',
+  // Mueve y escala el video dentro del contenedor
+  videoInner: {
+    transform: [
+      { scale: 1.8 },       // zoom al centro
+      { translateX: -width * 0 }, // mueve un poco a la izquierda o derecha según necesites
+      { translateY: 0 },    // ajusta si necesitas moverlo verticalmente
+    ],
   },
   tutorialText: {
     fontSize: 14,
@@ -107,18 +122,12 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   button: {
-    width: '100%',
+    width: 150,
     height: 56,
     borderRadius: 16,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#667eea',
-  },
-  buttonPressed: {
-    backgroundColor: '#5a67d8',
-    transform: [{ scale: 0.98 }],
   },
   buttonText: {
     color: '#FFFFFF',

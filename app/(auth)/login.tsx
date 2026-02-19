@@ -40,6 +40,7 @@ const FallingEmojis = () => {
     const randomSize = 15 + Math.random() * 10; // 👈 emojis pequeños
     const randomRotation = Math.random() > 0.5 ? 1 : -1; // sentido de giro aleatorio
 
+
     useEffect(() => {
       const loop = Animated.loop(
         Animated.sequence([
@@ -153,6 +154,8 @@ export default function LoginScreen() {
       ]).start();
     });
 
+    
+
     return () => {
       showSub.remove();
       hideSub.remove();
@@ -258,6 +261,30 @@ export default function LoginScreen() {
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
+
+  // ✨ Efecto neón para el texto "Explorar sin iniciar sesión"
+  const neonOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loopAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(neonOpacity, {
+          toValue: 0.3,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(neonOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loopAnimation.start();
+    return () => loopAnimation.stop();
+  }, [neonOpacity]);
+
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -371,14 +398,25 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             {/* Explorar sin sesión */}
-              <TouchableOpacity
-                onPress={() => router.replace("../(client)/")}
-                style={styles.exploreContainer}
+            <TouchableOpacity
+              onPress={() => router.replace("../(client)/")}
+              style={styles.exploreContainer}
+            >
+              <Animated.Text
+                style={[
+                  styles.exploreText,
+                  {
+                    opacity: neonOpacity,
+                    color: '#D97706', // color neón 💙
+                    textShadowColor: '#D97706',
+                    textShadowOffset: { width: 0, height: 0 },
+                    textShadowRadius: 15,
+                  },
+                ]}
               >
-                <Text style={styles.exploreText}>
-                  <Ionicons name="restaurant-outline" size={14} />  Explorar sin iniciar sesión
-                </Text>
-              </TouchableOpacity>
+                <Ionicons name="restaurant-outline" size={14} />  Explorar sin iniciar sesión
+              </Animated.Text>
+            </TouchableOpacity>
 
           </View>
         ) : (
@@ -503,10 +541,12 @@ const styles = StyleSheet.create({
   },
   exploreContainer: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 15,
   },
   exploreText: {
-    color: '#666',
-    fontSize: 13,
+    fontSize: 15,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+    textAlign: 'center',
   },
 });

@@ -57,8 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           router.replace("/(client)");
           break;
         case ERole.RESTAURANTE:
-            router.replace("/(restaurant)");
-            break;
+          router.replace("/(restaurant)");
+          break;
         default:
           router.replace("/login");
           break;
@@ -116,16 +116,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async (viewToast: boolean = true) => {
-    setUser(null);
-    setAuthToken(undefined);
-    await AsyncStorage.removeItem("accessToken");
-    await AsyncStorage.removeItem("user");
-    if (viewToast) {
-      Toast.show({
-        type: "success",
-        text1: "Cerrar Sesión",
-        text2: "Sesión cerrada correctamente",
-      });
+    try {
+      setUser(null);
+      setAuthToken(undefined);
+      await Promise.all([
+        AsyncStorage.removeItem("accessToken"),
+        AsyncStorage.removeItem("user"),
+      ]);
+      router.replace("/(auth)/login");
+      if (viewToast) {
+        Toast.show({
+          type: "success",
+          text1: "Cerrar Sesión",
+          text2: "Sesión cerrada correctamente",
+        });
+      }
+    } catch (error) {
+      console.error("Error al cerrar sesión", error);
     }
   };
 
@@ -158,40 +165,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   React.useEffect(() => {
-  const initAuth = async () => {
-    try {
-      setIsLoading(true);
-      const token = await AsyncStorage.getItem("accessToken");
-      const storedUser = await AsyncStorage.getItem("user");
+    const initAuth = async () => {
+      try {
+        setIsLoading(true);
+        const token = await AsyncStorage.getItem("accessToken");
+        const storedUser = await AsyncStorage.getItem("user");
 
-      // Si no hay token en storage, no intentamos validar
-      if (!token) {
+        // Si no hay token en storage, no intentamos validar
+        if (!token) {
+          await logout(false);
+          return;
+        }
+
+        const res = await validateToken(token);
+
+        // 🟢 CAMBIO: Verificamos explícitamente res.isSuccess y res.data
+        if (res.isSuccess && res.data && storedUser) {
+          setAuthToken(token);
+          setUser(JSON.parse(storedUser));
+          redirectByRole(token);
+        } else {
+          // Si el token no es válido según el negocio, limpiamos
+          await logout(false);
+        }
+      } catch (e) {
+        // 🟢 SOLUCIÓN AL CRASH: Si la API da 500 (Internal Server Error)
+        // forzamos el cierre de sesión para limpiar estados y redirigir al login.
+        console.log("Error fatal restaurando sesión:", mappingError(e));
         await logout(false);
-        return;
+      } finally {
+        setIsLoading(false);
       }
-
-      const res = await validateToken(token);
-
-      // 🟢 CAMBIO: Verificamos explícitamente res.isSuccess y res.data
-      if (res.isSuccess && res.data && storedUser) {
-        setAuthToken(token);
-        setUser(JSON.parse(storedUser));
-        redirectByRole(token);
-      } else {
-        // Si el token no es válido según el negocio, limpiamos
-        await logout(false);
-      }
-    } catch (e) {
-      // 🟢 SOLUCIÓN AL CRASH: Si la API da 500 (Internal Server Error)
-      // forzamos el cierre de sesión para limpiar estados y redirigir al login.
-      console.log("Error fatal restaurando sesión:", mappingError(e));
-      await logout(false); 
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  initAuth();
-}, [redirectByRole]);
+    };
+    initAuth();
+  }, [redirectByRole]);
 
   return (
     <AuthContext.Provider value={{ signIn, signUp, isLoading, user, logout }}>
