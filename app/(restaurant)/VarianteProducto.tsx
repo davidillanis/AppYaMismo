@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const VariantesProducto = () => {
   const { variants } = useLocalSearchParams();
@@ -29,7 +30,11 @@ const VariantesProducto = () => {
     setLista([...lista, { name: "", price: 0, stock: 0 }]);
   };
 
-  const actualizar = (index: number, field: keyof VariantRequestDTO, value: any) => {
+  const actualizar = (
+    index: number,
+    field: keyof VariantRequestDTO,
+    value: any
+  ) => {
     const copia = [...lista];
     copia[index] = { ...copia[index], [field]: value };
     setLista(copia);
@@ -44,11 +49,10 @@ const VariantesProducto = () => {
     });
   };
 
-
   const styles = createStyles(colors, normalize);
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
       <ScrollView style={styles.container}>
         <Text style={styles.title}>Variantes del Producto</Text>
 
@@ -65,22 +69,18 @@ const VariantesProducto = () => {
               keyboardType="numeric"
               style={styles.input}
               value={item.price === 0 ? "" : String(item.price)}
-
               onChangeText={(v) =>
                 actualizar(index, "price", v === "" ? 0 : Number(v))
               }
-
             />
             <TextInput
               placeholder="Stock"
               keyboardType="numeric"
               style={styles.input}
               value={item.stock === 0 ? "" : String(item.stock)}
-
               onChangeText={(v) =>
                 actualizar(index, "stock", v === "" ? 0 : Number(v))
               }
-
             />
           </View>
         ))}
@@ -94,7 +94,7 @@ const VariantesProducto = () => {
       <TouchableOpacity style={styles.saveButton} onPress={guardar}>
         <Text style={styles.saveText}>Guardar Variantes</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -135,6 +135,7 @@ const createStyles = (colors: any, normalize: any) =>
       backgroundColor: colors.primary,
       padding: 15,
       alignItems: "center",
+      paddingBottom: 25, // 👈 evita que quede debajo de la barra del sistema
     },
     saveText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   });
