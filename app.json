@@ -34,7 +34,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/toque.png",
+          "image": "./assets/images/toque1.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#E4DABF",
