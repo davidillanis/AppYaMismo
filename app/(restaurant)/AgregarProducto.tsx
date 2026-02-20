@@ -1,8 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import {
-  ProductCreateRequestDTO,
-  VariantRequestDTO,
+  ProductCreateRequestDTO
 } from "@/src/domain/entities/ProductEntity";
 import { uploadImageToImgBB } from "@/src/domain/services/UtilsService";
 import { mappingError } from "@/src/infrastructure/configuration/security/DecodeToken";
@@ -25,6 +24,12 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+interface VariantForm {
+  name: string;
+  price: string; // 👈 ahora es string mientras se escribe
+  stock: string;
+}
+
 
 const AgregarProducto: React.FC = () => {
   const colorScheme = useColorScheme();
@@ -39,7 +44,8 @@ const AgregarProducto: React.FC = () => {
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [category, setCategory] = React.useState("");
-  const [variants, setVariants] = React.useState<VariantRequestDTO[]>([]);
+  const [variants, setVariants] = React.useState<VariantForm[]>([]);
+
   const [loading, setLoading] = React.useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
@@ -51,18 +57,20 @@ const AgregarProducto: React.FC = () => {
   /* ================= VARIANTES ================= */
   // ... (Tu lógica de variantes con Modal se mantiene igual, está perfecta)
   const agregarVariante = () => {
-    setVariants([...variants, { name: "", price: 0, stock: 0 }]);
+    setVariants([...variants, { name: "", price: "", stock: "" }]);
+
   };
 
   const actualizarVariante = (
-    index: number,
-    field: keyof VariantRequestDTO,
-    value: any
-  ) => {
-    const copia = [...variants];
-    copia[index] = { ...copia[index], [field]: value };
-    setVariants(copia);
-  };
+  index: number,
+  field: keyof VariantForm,
+  value: string
+) => {
+  const copia = [...variants];
+  copia[index] = { ...copia[index], [field]: value };
+  setVariants(copia);
+};
+
 
   const eliminarVariante = (index: number) => {
     const copia = variants.filter((_, i) => i !== index);
@@ -141,7 +149,12 @@ const AgregarProducto: React.FC = () => {
         category,
         enabled: true,
         urlImage: imageUrl || "https://cdn.pixabay.com/photo/2014/11/05/15/57/salmon-518032_1280.jpg",
-        variants,
+        variants: variants.map(v => ({
+  name: v.name,
+  price: parseFloat(v.price) || 0,
+  stock: parseInt(v.stock) || 0
+})),
+
         // 🔥 2. USAMOS EL ID DINÁMICO (Adiós al '1' hardcoded)
         restaurantId: Number(restaurantId),
       };
@@ -235,8 +248,31 @@ const AgregarProducto: React.FC = () => {
             {variants.map((item, index) => (
               <View key={index} style={styles.card}>
                 <TextInput placeholder="Tamaño" value={item.name} style={styles.input} onChangeText={(v) => actualizarVariante(index, "name", v)} />
-                <TextInput placeholder="Precio" keyboardType="numeric" value={item.price === 0 ? "" : String(item.price)} style={styles.input} onChangeText={(v) => actualizarVariante(index, "price", Number(v) || 0)} />
-                <TextInput placeholder="Stock" keyboardType="numeric" value={item.stock === 0 ? "" : String(item.stock)} style={styles.input} onChangeText={(v) => actualizarVariante(index, "stock", Number(v) || 0)} />
+                <TextInput
+  placeholder="Precio"
+  keyboardType="decimal-pad"
+  value={item.price}
+  style={styles.input}
+  onChangeText={(v) => {
+    // Permite solo números y un punto decimal
+    if (/^\d*\.?\d*$/.test(v)) {
+      actualizarVariante(index, "price", v);
+    }
+  }}
+/>
+
+                <TextInput
+  placeholder="Stock"
+  keyboardType="numeric"
+  value={item.stock}
+  style={styles.input}
+  onChangeText={(v) => {
+    if (/^\d*$/.test(v)) {
+      actualizarVariante(index, "stock", v);
+    }
+  }}
+/>
+
                 <TouchableOpacity onPress={() => eliminarVariante(index)} style={styles.deleteBtn}>
                   <Ionicons name="trash" size={20} color="#fff" />
                 </TouchableOpacity>
