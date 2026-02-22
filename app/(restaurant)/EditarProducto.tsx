@@ -221,7 +221,7 @@ const EditarProducto: React.FC = () => {
               <Image source={{ uri: imageUrl }} style={styles.previewImage} resizeMode="cover" />
             ) : (
               <View style={styles.placeholderContainer}>
-                <Ionicons name="image-outline" size={40} color="#A55A00" />
+                <Ionicons name="image-outline" size={40} color={colors.text} />
                 <Text style={styles.imageText}>Sin imagen</Text>
               </View>
             )}
@@ -229,11 +229,11 @@ const EditarProducto: React.FC = () => {
 
           <View style={styles.imageActions}>
             <TouchableOpacity style={styles.iconButton} onPress={() => setShowCamera(true)}>
-              <Ionicons name="camera" size={24} color="#fff" />
+              <Ionicons name="camera" size={24} color={colors.text} />
               <Text style={styles.iconButtonText}>Cámara</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton} onPress={handlePickImage}>
-              <Ionicons name="images" size={24} color="#fff" />
+              <Ionicons name="images" size={24} color={colors.text} />
               <Text style={styles.iconButtonText}>Galería</Text>
             </TouchableOpacity>
           </View>
@@ -259,8 +259,8 @@ const EditarProducto: React.FC = () => {
           style={[styles.variantButton, { backgroundColor: colors.button }]}
           onPress={() => setShowVariants(true)}
         >
-          <Ionicons name="layers-outline" size={20} color="#fff" />
-          <Text style={styles.variantText}>
+          <Ionicons name="layers-outline" size={20} color={colors.textInverse} />
+          <Text style={[styles.variantText, { color: colors.textInverse }]}>
             {variants.length > 0
               ? `Variantes (${variants.length})`
               : "Configurar Variantes"}
@@ -283,58 +283,95 @@ const EditarProducto: React.FC = () => {
       </ScrollView>
 
       {/* MODAL VARIANTES */}
-      <Modal visible={showVariants} animationType="slide">
+      <Modal visible={showVariants} animationType="slide" transparent={false}>
         <View style={{ flex: 1, backgroundColor: colors.background }}>
-          <ScrollView style={{ padding: 20 }}>
-            <Text style={styles.title}>Editar Variantes</Text>
+          {/* MODAL HEADER */}
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+            <TouchableOpacity onPress={() => setShowVariants(false)} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Editar Variantes</Text>
+            <View style={{ width: 40 }} />
+          </View>
 
-            {variants.map((item, index) => (
-              <View key={index} style={styles.card}>
-                <TextInput
-                  placeholder="Nombre"
-                  value={item.name}
-                  style={styles.input}
-                  onChangeText={(v) => actualizarVariante(index, "name", v)}
-                />
-                <TextInput
-                  placeholder="Precio"
-                  keyboardType="numeric"
-                  value={item.price === 0 ? "" : String(item.price)}
-                  style={styles.input}
-                  onChangeText={(v) =>
-                    actualizarVariante(index, "price", Number(v) || 0)
-                  }
-                />
-                <TextInput
-                  placeholder="Stock"
-                  keyboardType="numeric"
-                  value={item.stock === 0 ? "" : String(item.stock)}
-                  style={styles.input}
-                  onChangeText={(v) =>
-                    actualizarVariante(index, "stock", Number(v) || 0)
-                  }
-                />
-
-                <TouchableOpacity
-                  onPress={() => eliminarVariante(index)}
-                  style={styles.deleteBtn}
-                >
-                  <Ionicons name="trash" size={20} color="#fff" />
-                </TouchableOpacity>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+            {variants.length === 0 ? (
+              <View style={styles.emptyVariants}>
+                <Ionicons name="layers-outline" size={60} color={colors.textSecondary} style={{ opacity: 0.5 }} />
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No hay variantes</Text>
+                <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>Agrega opciones como tamaño o extras para este producto</Text>
               </View>
-            ))}
+            ) : (
+              variants.map((item, index) => (
+                <View key={index} style={[styles.variantCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={styles.variantCardHeader}>
+                    <Text style={[styles.variantIndex, { color: colors.primary }]}>Variante #{index + 1}</Text>
+                    <TouchableOpacity onPress={() => eliminarVariante(index)} style={styles.variantDeleteBtn}>
+                      <Ionicons name="trash-outline" size={20} color={colors.error} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.variantRow}>
+                    <View style={{ flex: 2 }}>
+                      <Text style={[styles.miniLabel, { color: colors.textSecondary }]}>Nombre / Tamaño</Text>
+                      <TextInput
+                        placeholder="Ej: Familiar, 1L..."
+                        placeholderTextColor={colors.textTertiary}
+                        value={item.name}
+                        style={[styles.modalInput, { color: colors.text, borderColor: colors.border }]}
+                        onChangeText={(v) => actualizarVariante(index, "name", v)}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.variantRow}>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                      <Text style={[styles.miniLabel, { color: colors.textSecondary }]}>Precio</Text>
+                      <View style={[styles.inputContainer, { borderColor: colors.border }]}>
+                        <Text style={[styles.currencyPrefix, { color: colors.textSecondary }]}>$</Text>
+                        <TextInput
+                          placeholder="0.00"
+                          placeholderTextColor={colors.textTertiary}
+                          keyboardType="numeric"
+                          value={item.price === 0 ? "" : String(item.price)}
+                          style={[styles.modalInputFlat, { color: colors.text }]}
+                          onChangeText={(v) =>
+                            actualizarVariante(index, "price", Number(v) || 0)
+                          }
+                        />
+                      </View>
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.miniLabel, { color: colors.textSecondary }]}>Stock</Text>
+                      <TextInput
+                        placeholder="Cant."
+                        placeholderTextColor={colors.textTertiary}
+                        keyboardType="numeric"
+                        value={item.stock === 0 ? "" : String(item.stock)}
+                        style={[styles.modalInput, { color: colors.text, borderColor: colors.border }]}
+                        onChangeText={(v) =>
+                          actualizarVariante(index, "stock", Number(v) || 0)
+                        }
+                      />
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
           </ScrollView>
 
-          <TouchableOpacity style={styles.fab} onPress={agregarVariante}>
-            <Ionicons name="add" size={30} color="#fff" />
-          </TouchableOpacity>
+          {/* BOTTOM ACTIONS */}
+          <View style={[styles.modalFooter, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+            <TouchableOpacity style={[styles.addVariantBtn, { backgroundColor: colors.secondary }]} onPress={agregarVariante}>
+              <Ionicons name="add" size={24} color={colors.textInverse} />
+              <Text style={styles.addVariantText}>Nueva Variante</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() => setShowVariants(false)}
-          >
-            <Text style={styles.saveText}>Listo</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={[styles.modalDoneBtn, { backgroundColor: colors.primary }]} onPress={() => setShowVariants(false)}>
+              <Text style={styles.modalDoneText}>Listo</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 
@@ -372,18 +409,18 @@ const createStyles = (colors: any, normalize: any) =>
     imagePreviewContainer: {
       width: '100%',
       height: 200,
-      backgroundColor: '#F8EBD3',
+      backgroundColor: colors.textInverse, // Consistent with AgregarProducto
       borderRadius: 12,
       overflow: 'hidden',
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 1,
-      borderColor: '#A55A00',
+      borderColor: colors.border,
       borderStyle: 'dashed'
     },
     previewImage: { width: '100%', height: '100%' },
     placeholderContainer: { alignItems: 'center' },
-    imageText: { color: "#A55A00", fontWeight: "bold", marginTop: 8 },
+    imageText: { color: colors.text, fontWeight: "bold", marginTop: 8 },
     imageActions: { flexDirection: 'row', gap: 15, marginTop: 15 },
     iconButton: {
       flexDirection: 'row',
@@ -395,9 +432,9 @@ const createStyles = (colors: any, normalize: any) =>
       gap: 8
     },
     iconButtonText: { color: '#fff', fontWeight: 'bold' },
-    label: { fontWeight: "bold", marginTop: 10 },
+    label: { fontWeight: "bold", marginTop: 10, color: colors.text },
     input: {
-      backgroundColor: "#F8EBD3",
+      backgroundColor: colors.surface,
       borderRadius: 8,
       padding: 10,
       marginTop: 5,
@@ -421,7 +458,7 @@ const createStyles = (colors: any, normalize: any) =>
     },
     saveText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
     card: {
-      backgroundColor: "#F8EBD3",
+      backgroundColor: colors.textInverse,
       borderRadius: 10,
       padding: 15,
       marginBottom: 15,
@@ -443,7 +480,139 @@ const createStyles = (colors: any, normalize: any) =>
       alignItems: "center",
       justifyContent: "center",
     },
+
+    // --- NUEVOS ESTILOS MODAL (Consistentes) ---
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      borderBottomWidth: 1,
+    },
+    closeButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalTitle: {
+      fontSize: normalize(16),
+      fontWeight: '700',
+    },
+    emptyVariants: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 60,
+    },
+    emptyText: {
+      fontSize: normalize(16),
+      fontWeight: 'bold',
+      marginTop: 15,
+    },
+    emptySubtext: {
+      fontSize: normalize(14),
+      textAlign: 'center',
+      marginTop: 5,
+      paddingHorizontal: 40,
+    },
+    variantCard: {
+      borderRadius: 15,
+      padding: 15,
+      marginBottom: 15,
+      borderWidth: 1,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    variantCardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    variantIndex: {
+      fontSize: normalize(14),
+      fontWeight: 'bold',
+    },
+    variantDeleteBtn: {
+      padding: 5,
+    },
+    variantRow: {
+      flexDirection: 'row',
+      marginBottom: 12,
+    },
+    miniLabel: {
+      fontSize: normalize(10),
+      fontWeight: 'bold',
+      marginBottom: 4,
+      textTransform: 'uppercase',
+    },
+    modalInput: {
+      backgroundColor: 'rgba(0,0,0,0.03)',
+      borderRadius: 8,
+      padding: 10,
+      borderWidth: 1,
+      fontSize: normalize(14),
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.03)',
+      borderRadius: 8,
+      borderWidth: 1,
+      paddingHorizontal: 10,
+    },
+    currencyPrefix: {
+      fontSize: normalize(14),
+      fontWeight: 'bold',
+      marginRight: 5,
+    },
+    modalInputFlat: {
+      flex: 1,
+      paddingVertical: 10,
+      fontSize: normalize(14),
+    },
+    modalFooter: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      padding: 15,
+      gap: 10,
+      borderTopWidth: 1,
+    },
+    addVariantBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      paddingVertical: 14,
+      gap: 8,
+    },
+    addVariantText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: normalize(14),
+    },
+    modalDoneBtn: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      paddingVertical: 14,
+    },
+    modalDoneText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: normalize(14),
+    },
   });
 
 export default EditarProducto;
-

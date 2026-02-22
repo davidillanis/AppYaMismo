@@ -36,7 +36,7 @@ const FuncionarioIndex: React.FC = () => {
 
   // Configuración de elementos del menú
   const menuItems = [
-    { icon: 'person-outline', title: 'Mi perfil', route: '/PerfilAdmi' },
+    { icon: 'person-outline', title: 'Mi perfil', route: '/ProfileUser' },
   ];
 
   // Configuración de tarjetas de servicios

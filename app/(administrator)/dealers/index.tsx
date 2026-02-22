@@ -1,5 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { ERole } from "@/src/domain/entities/UserEntity";
 import { DealerCardAdmin } from "@/src/presentation/components/dealers/DealerCardAdmin";
 import { ProductStatusFilter } from "@/src/presentation/components/filters/ProductStatusFilter";
 import { useUserList } from "@/src/presentation/hooks/useUserList";
@@ -30,7 +31,8 @@ export default function DealerManagement() {
   // 1. OBTENER USUARIOS GENERALES
   const { data: response, isLoading, refetch } = useUserList({
     size: 100,
-    fields: ["id", "name", "lastName", "email", "phone", "imageUrl", "enabled", "roles"]
+    fields: ["id", "name", "lastName", "email", "phone", "imageUrl", "enabled", "roles"],
+    role: ERole.REPARTIDOR
   });
 
   const allUsers = response?.data?.content || [];
@@ -38,19 +40,7 @@ export default function DealerManagement() {
   // 2. FUNCIÓN SEGURA PARA DETECTAR REPARTIDORES
   // Corrige el problema del "TypeError" validando todos los formatos posibles
   const isRepartidor = (user: any) => {
-    const r = user.roles;
-    if (!r) return false;
-
-    // Caso A (Tu caso actual): Objeto {"id":4, "role":"REPARTIDOR"}
-    if (r.role === "REPARTIDOR") return true;
-
-    // Caso B: Array de Objetos [{"role":"REPARTIDOR"}]
-    if (Array.isArray(r) && r.some((item: any) => item.role === "REPARTIDOR")) return true;
-
-    // Caso C: Array de Strings ["REPARTIDOR"]
-    if (Array.isArray(r) && r.includes("REPARTIDOR")) return true;
-
-    return false;
+    return true;
   };
 
   // Filtramos la lista usando la función segura
@@ -61,11 +51,11 @@ export default function DealerManagement() {
   // 3. FILTRADO DE UI (Buscador y Estados)
   const filteredDealers = dealers.filter((user) => {
     const fullName = `${user.name || ''} ${user.lastName || ''}`.toLowerCase();
-    
+
     // Filtro Texto
-    const matchesSearch = fullName.includes(searchText.toLowerCase()) || 
-                          (user.email && user.email.toLowerCase().includes(searchText.toLowerCase()));
-    
+    const matchesSearch = fullName.includes(searchText.toLowerCase()) ||
+      (user.email && user.email.toLowerCase().includes(searchText.toLowerCase()));
+
     // Filtro Estado
     let matchesStatus = true;
     if (selectedStatus === "ACTIVE") matchesStatus = user.enabled === true;
@@ -93,60 +83,60 @@ export default function DealerManagement() {
 
       <View style={styles.filterSection}>
         <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#666" />
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Buscar por nombre..."
-                value={searchText}
-                onChangeText={setSearchText}
-                placeholderTextColor="#999"
-            />
+          <Ionicons name="search" size={20} color="#666" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar por nombre..."
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#999"
+          />
         </View>
 
         <ProductStatusFilter
-            selectedStatus={selectedStatus}
-            onSelectStatus={setSelectedStatus}
-            colors={colors}
-            backgroundColor={colors.background}
+          selectedStatus={selectedStatus}
+          onSelectStatus={setSelectedStatus}
+          colors={colors}
+          backgroundColor={colors.background}
         />
       </View>
 
       {isLoading ? (
         <View style={styles.center}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={{ marginTop: 10, color: "#666" }}>Cargando repartidores...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: 10, color: "#666" }}>Cargando repartidores...</Text>
         </View>
       ) : (
         <FlatList
-            data={filteredDealers}
-            keyExtractor={(item) => String(item.id)}
-            contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => {
-                // Adaptador visual para que la tarjeta no falle
-                const operatorAdapter = {
-                    id: 0,
-                    license: "No asignada",
-                    salary: 0,
-                    userEntity: item,
-                    assignmentSet: []
-                };
+          data={filteredDealers}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => {
+            // Adaptador visual para que la tarjeta no falle
+            const operatorAdapter = {
+              id: 0,
+              license: "No asignada",
+              salary: 0,
+              userEntity: item,
+              assignmentSet: []
+            };
 
-                return (
-                    <DealerCardAdmin
-                        operator={operatorAdapter as any}
-                        colors={colors}
-                        onToggleStatus={handleToggleStatus}
-                    />
-                );
-            }}
-            ListEmptyComponent={
-                <View style={styles.center}>
-                    <Ionicons name="bicycle-outline" size={50} color="#ccc" />
-                    <Text style={{ color: "#999", marginTop: 10 }}>No se encontraron repartidores.</Text>
-                </View>
-            }
-            refreshing={isLoading}
-            onRefresh={refetch}
+            return (
+              <DealerCardAdmin
+                operator={operatorAdapter as any}
+                colors={colors}
+                onToggleStatus={handleToggleStatus}
+              />
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.center}>
+              <Ionicons name="bicycle-outline" size={50} color="#ccc" />
+              <Text style={{ color: "#999", marginTop: 10 }}>No se encontraron repartidores.</Text>
+            </View>
+          }
+          refreshing={isLoading}
+          onRefresh={refetch}
         />
       )}
     </SafeAreaView>

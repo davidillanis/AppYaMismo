@@ -1,4 +1,4 @@
-import { UserEntity } from "@/src/domain/entities/UserEntity";
+import { ERole, UserEntity } from "@/src/domain/entities/UserEntity";
 import { listUsers } from "@/src/domain/services/UserService";
 import { ResponseStatusDTO } from "@/src/domain/types/ResponseStatusDTO";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ export type UserListParams = {
   sortBy?: string;
   direction?: "ASC" | "DESC";
   fields?: string[];
+  role?: ERole;
 };
 
 /**

@@ -1,5 +1,6 @@
 import { apiClient } from "@/src/infrastructure/configuration/http/apiClient";
 import {
+  ERole,
   OperatorEntity,
   UserCreateGeneralRequestDTO,
   UserCreateRequestDTO,
@@ -34,12 +35,18 @@ export const registerCustomer = async (
   return response.data;
 };
 export const listUsers = async (
-  params?: { fields?: string[] } & PageRequestDTO,
+  params?: { fields?: string[]; role?: ERole } & PageRequestDTO,
 ): Promise<ResponseStatusDTO<PageResponse<UserEntity[]>>> => {
+  console.log(params);
+  console.log(params?.role);
+
   const query: Record<string, string> = {};
   if (params) {
     if (params.fields && params.fields.length > 0) {
       query.fields = params.fields.join(",");
+    }
+    if (params.role) {
+      query.role = params.role;
     }
     if (params.page !== undefined) query.page = String(params.page);
     if (params.size !== undefined) query.size = String(params.size);
@@ -51,10 +58,9 @@ export const listUsers = async (
     .join("&");
 
   const url = `${BASE_PATH}/list${queryString ? "?" + queryString : ""}`;
-  const response =
-    await apiClient.get<Promise<ResponseStatusDTO<PageResponse<UserEntity[]>>>>(
-      url,
-    );
+  const response = await apiClient.get<
+    ResponseStatusDTO<PageResponse<UserEntity[]>>
+  >(url);
   return response.data;
 };
 
@@ -76,10 +82,9 @@ export const listOperators = async (
     .join("&");
 
   const url = `${BASE_PATH}/list-operator${queryString ? "?" + queryString : ""}`;
-  const response =
-    await apiClient.get<
-      Promise<ResponseStatusDTO<PageResponse<OperatorEntity[]>>>
-    >(url);
+  const response = await apiClient.get<
+    ResponseStatusDTO<PageResponse<OperatorEntity[]>>
+  >(url);
   return response.data;
 };
 
