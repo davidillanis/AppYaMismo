@@ -4,7 +4,7 @@
     "slug": "YaMismo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icono.png",
+    "icon": "./assets/images/icono_1024.png",
     "scheme": "yamismo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "./assets/images/icono.png"
+        "foregroundImage": "./assets/images/icono_1024.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -27,15 +27,15 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/icono.png"
+      "favicon": "./assets/images/icono_1024.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/toque1.png",
-          "imageWidth": 200,
+          "image": "./assets/images/toque1_1024.png",
+          "imageWidth": 1024,
           "resizeMode": "contain",
           "backgroundColor": "#E4DABF",
           "dark": {
